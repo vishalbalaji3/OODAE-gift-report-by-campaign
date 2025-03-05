@@ -36,10 +36,38 @@ server <- function(input, output, session) {
     data
   })
   
+  # Common reactive values used by multiple modules
+  
+  # Fiscal years calculation - used in multiple modules
+  fiscal_years <- reactive({
+    sort(unique(filtered_data()$`Fiscal Year`))
+  })
+  
+  # Common statistics for summaries
+  summary_stats <- reactive({
+    data <- filtered_data()
+    
+    if(nrow(data) == 0) {
+      return(list(
+        total_gifts = 0,
+        total_amount = 0,
+        total_constituents = 0,
+        avg_gift_size = 0
+      ))
+    }
+    
+    list(
+      total_gifts = nrow(data),
+      total_amount = sum(data$`Fund Split Amount`, na.rm = TRUE),
+      total_constituents = n_distinct(data$`Constituent ID`),
+      avg_gift_size = sum(data$`Fund Split Amount`, na.rm = TRUE) / nrow(data)
+    )
+  })
+  
   # Initialize modules
   summaryStatisticsServer("summary", filtered_data)
   fundSplitServer("fundSplit", filtered_data)
-  fundAnalysisServer("fundAnalysis", filtered_data)
+  fundAnalysisServer("fundAnalysis", filtered_data, fiscal_years)
   constituentsServer("constituents", filtered_data)
   avgGiftServer("avgGift", filtered_data)
   topDonorsServer("topDonors", filtered_data)

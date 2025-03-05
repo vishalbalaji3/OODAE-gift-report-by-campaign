@@ -23,8 +23,18 @@ fundAnalysisUI <- function(id) {
 }
 
 # Server Function
-fundAnalysisServer <- function(id, filtered_data) {
+# Server Function
+fundAnalysisServer <- function(id, filtered_data, fiscal_years = NULL) {
   moduleServer(id, function(input, output, session) {
+    
+    # Use local fiscal_years if provided, otherwise calculate it
+    local_fiscal_years <- if(!is.null(fiscal_years)) {
+      fiscal_years
+    } else {
+      reactive({
+        sort(unique(filtered_data()$`Fiscal Year`))
+      })
+    }
     
     # Reactive expression for processed data
     processed_data <- reactive({
@@ -33,10 +43,8 @@ fundAnalysisServer <- function(id, filtered_data) {
     
     # Fund Analysis Summary
     output$fundAnalysisSummary <- renderUI({
-      # Get selected fiscal years
-      fiscal_years <- sort(unique(filtered_data()$`Fiscal Year`))
-      
-      if (length(fiscal_years) == 0) {
+      # Use the local fiscal years reactive
+      if (length(local_fiscal_years()) == 0) {
         return(HTML("<p>No data available for the selected filters.</p>"))
       }
       

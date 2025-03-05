@@ -2,48 +2,17 @@
 
 # Process summary data (Gift Type by Fiscal Year)
 process_summary_data <- function(filtered_data) {
-  fiscal_years <- sort(unique(filtered_data$`Fiscal Year`))
-  
-  filtered_data %>%
-    group_by(`Gift Type`, `Fiscal Year`) %>%
-    summarise(Total_Fund_Split_Amount = sum(`Fund Split Amount`, na.rm = TRUE),
-              .groups = 'drop') %>%
-    pivot_wider(names_from = `Fiscal Year`,
-                values_from = Total_Fund_Split_Amount,
-                values_fill = 0) %>%
-    mutate(Total = rowSums(select(., -`Gift Type`), na.rm = TRUE)) %>%
-    select(`Gift Type`, all_of(fiscal_years), Total)
+  process_data_by_group(filtered_data, group_cols = "Gift Type")
 }
 
 # Process fund split data (Constituency Code by Fiscal Year)
 process_fund_split_data <- function(filtered_data) {
-  fiscal_years <- sort(unique(filtered_data$`Fiscal Year`))
-  
-  filtered_data %>%
-    group_by(`Primary Constituency Code`, `Fiscal Year`) %>%
-    summarise(Total_Fund_Split_Amount = sum(`Fund Split Amount`, na.rm = TRUE),
-              .groups = 'drop') %>%
-    pivot_wider(names_from = `Fiscal Year`,
-                values_from = Total_Fund_Split_Amount,
-                values_fill = 0) %>%
-    mutate(Total = rowSums(select(., -`Primary Constituency Code`), na.rm = TRUE)) %>%
-    select(`Primary Constituency Code`, all_of(fiscal_years), Total)
+  process_data_by_group(filtered_data, group_cols = "Primary Constituency Code")
 }
 
 # Process fund analysis data (Fund by Fiscal Year)
 process_fund_analysis_data <- function(filtered_data) {
-  fiscal_years <- sort(unique(filtered_data$`Fiscal Year`))
-  
-  filtered_data %>%
-    group_by(`Fund ID`, `Fund Description`, `Fiscal Year`) %>%
-    summarise(Total_Fund_Split_Amount = sum(`Fund Split Amount`, na.rm = TRUE),
-              .groups = 'drop') %>%
-    pivot_wider(names_from = `Fiscal Year`,
-                values_from = Total_Fund_Split_Amount,
-                values_fill = 0) %>%
-    mutate(Total = rowSums(select(., -c(`Fund ID`, `Fund Description`)), na.rm = TRUE)) %>%
-    select(`Fund ID`, `Fund Description`, all_of(fiscal_years), Total) %>%
-    arrange(desc(Total))
+  process_data_by_group(filtered_data, group_cols = c("Fund ID", "Fund Description"))
 }
 
 # Process unique constituents data (Unique constituents by Constituency and Fiscal Year)
@@ -73,18 +42,8 @@ process_unique_constituents_data <- function(filtered_data) {
 
 # Process top donors data
 process_top_donors_data <- function(filtered_data) {
-  fiscal_years <- sort(unique(filtered_data$`Fiscal Year`))
-  
-  filtered_data %>%
-    group_by(`Constituent ID`, `Key Indicator`, `Name`, `Fiscal Year`) %>%
-    summarise(Total_Fund_Split_Amount = sum(`Fund Split Amount`, na.rm = TRUE),
-              .groups = 'drop') %>%
-    pivot_wider(names_from = `Fiscal Year`,
-                values_from = Total_Fund_Split_Amount,
-                values_fill = 0) %>%
-    mutate(Total = rowSums(select(., -c(`Constituent ID`, `Key Indicator`, `Name`)), na.rm = TRUE)) %>%
-    select(`Constituent ID`, `Key Indicator`, `Name`, all_of(fiscal_years), Total) %>%
-    arrange(desc(Total))
+  process_data_by_group(filtered_data, 
+                        group_cols = c("Constituent ID", "Key Indicator", "Name"))
 }
 
 # Process average gift size data

@@ -14,6 +14,7 @@ source("data_prep.R")
 # Source helper functions and modules
 source("R/helpers.R")
 source("R/data_processing.R")
+source("R/shared_processing.R")
 
 # Source module files
 modules_path <- "R/modules"
