@@ -64,14 +64,14 @@ server <- function(input, output, session) {
     )
   })
   
-  # Initialize modules
-  summaryStatisticsServer("summary", filtered_data)
-  fundSplitServer("fundSplit", filtered_data)
-  fundAnalysisServer("fundAnalysis", filtered_data, fiscal_years)
-  constituentsServer("constituents", filtered_data)
-  avgGiftServer("avgGift", filtered_data)
-  topDonorsServer("topDonors", filtered_data)
-  giftDistServer("giftDist", filtered_data)
-  donorLevelsServer("donorLevels", filtered_data)
-  fullDataServer("fullData", filtered_data)
+  # Initialize modules with shared reactive values
+  summaryStatisticsServer("summary", filtered_data, fiscal_years, summary_stats)
+  fundSplitServer("fundSplit", filtered_data, fiscal_years, summary_stats)
+  fundAnalysisServer("fundAnalysis", filtered_data, fiscal_years, summary_stats)
+  constituentsServer("constituents", filtered_data, fiscal_years, summary_stats)
+  avgGiftServer("avgGift", filtered_data, fiscal_years, summary_stats)
+  topDonorsServer("topDonors", filtered_data, fiscal_years, summary_stats)
+  giftDistServer("giftDist", filtered_data, fiscal_years, summary_stats)
+  donorLevelsServer("donorLevels", filtered_data, fiscal_years, summary_stats)
+  fullDataServer("fullData", filtered_data, fiscal_years, summary_stats)
 }

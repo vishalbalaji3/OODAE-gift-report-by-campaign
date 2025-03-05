@@ -23,7 +23,7 @@ topDonorsUI <- function(id) {
 }
 
 # Server Function
-topDonorsServer <- function(id, filtered_data) {
+topDonorsServer <- function(id, filtered_data, fiscal_years, summary_stats) {
   moduleServer(id, function(input, output, session) {
     
     # Reactive expression for processed data
@@ -33,10 +33,8 @@ topDonorsServer <- function(id, filtered_data) {
     
     # Top Donors Summary
     output$topDonorsSummary <- renderUI({
-      # Get selected fiscal years
-      fiscal_years <- sort(unique(filtered_data()$`Fiscal Year`))
-      
-      if (length(fiscal_years) == 0) {
+      # Use shared fiscal_years reactive
+      if (length(fiscal_years()) == 0) {
         return(HTML("<p>No data available for the selected filters.</p>"))
       }
       
@@ -44,39 +42,16 @@ topDonorsServer <- function(id, filtered_data) {
       donors_data <- processed_data() %>%
         head(5)
       
-      # Create a summary table HTML
-      html_table <- '<table class="table table-striped table-bordered">'
-      html_table <- paste0(html_table, '<thead><tr>',
-                           '<th>Donor</th>',
-                           '<th class="text-right">Total Contribution</th>',
-                           '<th class="text-right">% of Total</th>',
-                           '</tr></thead><tbody>')
-      
-      # Calculate grand total for percentage calculation
-      grand_total <- sum(donors_data$Total, na.rm = TRUE)
+      # Calculate overall total for percentage calculation
       overall_total <- sum(processed_data()$Total, na.rm = TRUE)
       
-      # Add rows for each donor
-      for(i in 1:nrow(donors_data)) {
-        row <- donors_data[i, ]
-        amount <- format_currency(row$Total)
-        percent <- sprintf("%.1f%%", (row$Total / overall_total) * 100)
-        
-        html_table <- paste0(html_table, '<tr>',
-                             '<td>', row$Name, '</td>',
-                             '<td class="text-right">', amount, '</td>',
-                             '<td class="text-right">', percent, '</td>',
-                             '</tr>')
-      }
-      
-      # Add totals row
-      html_table <- paste0(html_table, '<tr class="info">',
-                           '<th>Total (Top 5)</th>',
-                           '<th class="text-right">', format_currency(grand_total), '</th>',
-                           '<th class="text-right">', sprintf("%.1f%%", (grand_total / overall_total) * 100), '</th>',
-                           '</tr></tbody></table>')
-      
-      HTML(html_table)
+      create_summary_table(
+        data = donors_data,
+        id_col = "Name",
+        value_col = "Total Contribution", 
+        percent_col = "% of Total",
+        overall_total = overall_total
+      )
     })
     
     # Render data table

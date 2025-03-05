@@ -23,7 +23,7 @@ constituentsUI <- function(id) {
 }
 
 # Server Function
-constituentsServer <- function(id, filtered_data) {
+constituentsServer <- function(id, filtered_data, fiscal_years, summary_stats) {
   moduleServer(id, function(input, output, session) {
     
     # Reactive expression for processed data

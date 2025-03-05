@@ -23,7 +23,7 @@ fundSplitUI <- function(id) {
 }
 
 # Server Function
-fundSplitServer <- function(id, filtered_data) {
+fundSplitServer <- function(id, filtered_data, fiscal_years, summary_stats) {
   moduleServer(id, function(input, output, session) {
     
     # Reactive expression for processed data
@@ -33,56 +33,22 @@ fundSplitServer <- function(id, filtered_data) {
     
     # Fund Split Summary
     output$fundSplitSummary <- renderUI({
-      # Get primary constituency codes
-      const_codes <- sort(unique(filtered_data()$`Primary Constituency Code`))
-      
-      # Get selected fiscal years or most recent if none selected
-      fiscal_years <- sort(unique(filtered_data()$`Fiscal Year`))
-      
-      if (length(fiscal_years) == 0) {
+      # Use shared fiscal_years reactive
+      if (length(fiscal_years()) == 0) {
         return(HTML("<p>No data available for the selected filters.</p>"))
       }
-      
-      # Use the most recent year for display if no specific filters selected
-      most_recent_year <- tail(fiscal_years, 1)
       
       # Process the fund split data for summary (top 5 constituencies)
       fund_data <- processed_data() %>%
         arrange(desc(Total)) %>%
         head(5)
       
-      # Create a summary table HTML
-      html_table <- '<table class="table table-striped table-bordered">'
-      html_table <- paste0(html_table, '<thead><tr>',
-                           '<th>Constituency</th>',
-                           '<th class="text-right">Total Amount</th>',
-                           '<th class="text-right">% of Total</th>',
-                           '</tr></thead><tbody>')
-      
-      # Calculate grand total for percentage calculation
-      grand_total <- sum(fund_data$Total, na.rm = TRUE)
-      
-      # Add rows for each constituency
-      for(i in 1:nrow(fund_data)) {
-        row <- fund_data[i, ]
-        amount <- format_currency(row$Total)
-        percent <- sprintf("%.1f%%", (row$Total / grand_total) * 100)
-        
-        html_table <- paste0(html_table, '<tr>',
-                             '<td>', row$`Primary Constituency Code`, '</td>',
-                             '<td class="text-right">', amount, '</td>',
-                             '<td class="text-right">', percent, '</td>',
-                             '</tr>')
-      }
-      
-      # Add totals row
-      html_table <- paste0(html_table, '<tr class="info">',
-                           '<th>Total (Top 5)</th>',
-                           '<th class="text-right">', format_currency(grand_total), '</th>',
-                           '<th class="text-right">100.0%</th>',
-                           '</tr></tbody></table>')
-      
-      HTML(html_table)
+      create_summary_table(
+        data = fund_data,
+        id_col = "Primary Constituency Code",
+        value_col = "Total Amount",
+        percent_col = "% of Total"
+      )
     })
     
     # Render data table

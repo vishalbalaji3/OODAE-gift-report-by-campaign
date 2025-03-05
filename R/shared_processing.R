@@ -41,8 +41,11 @@ process_data_by_group <- function(filtered_data, group_cols, value_col = "Fund S
 }
 
 # Create an HTML summary table (reduces duplication in UI rendering)
+# In R/shared_processing.R
+# Update create_summary_table to handle overall_total parameter
 create_summary_table <- function(data, id_col, value_col, percent_col = NULL, 
-                                 total_row = TRUE, format_fn = format_currency) {
+                                 total_row = TRUE, format_fn = format_currency,
+                                 overall_total = NULL) {
   # Start building the HTML table
   html_table <- '<table class="table table-striped table-bordered">'
   
@@ -58,14 +61,15 @@ create_summary_table <- function(data, id_col, value_col, percent_col = NULL,
   html_table <- paste0(html_table, '</tr></thead><tbody>')
   
   # Calculate total if needed for percentages
-  if(!is.null(percent_col)) {
-    total_value <- sum(data$Total, na.rm = TRUE)
-  }
-  
-  # Add data rows
   value_col_idx <- which(names(data) == "Total")
   id_col_idx <- which(names(data) == names(data)[1])
   
+  grand_total <- sum(data$Total, na.rm = TRUE)
+  
+  # Use overall_total if provided, otherwise grand_total
+  total_for_percent <- if(!is.null(overall_total)) overall_total else grand_total
+  
+  # Add data rows
   for(i in 1:min(nrow(data), 5)) { # Show only top 5 rows in summary
     row <- data[i, ]
     
@@ -79,7 +83,7 @@ create_summary_table <- function(data, id_col, value_col, percent_col = NULL,
     
     # Add percent column if requested
     if(!is.null(percent_col)) {
-      percent <- sprintf("%.1f%%", (row[[value_col_idx]] / total_value) * 100)
+      percent <- sprintf("%.1f%%", (row[[value_col_idx]] / total_for_percent) * 100)
       html_table <- paste0(html_table, '<td class="text-right">', percent, '</td>')
     }
     
@@ -88,14 +92,18 @@ create_summary_table <- function(data, id_col, value_col, percent_col = NULL,
   
   # Add total row if requested
   if(total_row) {
-    total_value <- sum(data$Total, na.rm = TRUE)
+    total_label <- if(!is.null(overall_total) && overall_total > grand_total) 
+      "Total (Top 5)" else "Total"
     
     html_table <- paste0(html_table, '<tr class="info">',
-                         '<th>Total</th>',
-                         '<th class="text-right">', format_fn(total_value), '</th>')
+                         '<th>', total_label, '</th>',
+                         '<th class="text-right">', format_fn(grand_total), '</th>')
     
     if(!is.null(percent_col)) {
-      html_table <- paste0(html_table, '<th class="text-right">100.0%</th>')
+      percent_total <- if(!is.null(overall_total)) 
+        sprintf("%.1f%%", (grand_total / total_for_percent) * 100)
+      else "100.0%"
+      html_table <- paste0(html_table, '<th class="text-right">', percent_total, '</th>')
     }
     
     html_table <- paste0(html_table, '</tr>')

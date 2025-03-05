@@ -21,7 +21,7 @@ summaryStatisticsUI <- function(id) {
 }
 
 # Server Function
-summaryStatisticsServer <- function(id, filtered_data) {
+summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_stats) {
   moduleServer(id, function(input, output, session) {
     
     # Process summary data

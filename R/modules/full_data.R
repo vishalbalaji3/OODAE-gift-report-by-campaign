@@ -23,7 +23,7 @@ fullDataUI <- function(id) {
 }
 
 # Server Function
-fullDataServer <- function(id, filtered_data) {
+fullDataServer <- function(id, filtered_data, fiscal_years, summary_stats) {
   moduleServer(id, function(input, output, session) {
     
     # Use the filtered data directly
@@ -38,17 +38,14 @@ fullDataServer <- function(id, filtered_data) {
         return(HTML("<p>No data available for the selected filters.</p>"))
       }
       
-      # Calculate summary statistics
-      total_gifts <- nrow(data)
-      total_amount <- sum(data$`Fund Split Amount`, na.rm = TRUE)
-      total_constituents <- n_distinct(data$`Constituent ID`)
-      avg_gift_size <- total_amount / total_gifts
+      # Use shared summary_stats reactive
+      stats <- summary_stats()
       
       # Get fiscal year range
-      fiscal_years <- sort(unique(data$`Fiscal Year`))
-      year_range <- ifelse(length(fiscal_years) > 1, 
-                           paste(fiscal_years[1], "to", tail(fiscal_years, 1)),
-                           fiscal_years[1])
+      years <- fiscal_years()
+      year_range <- ifelse(length(years) > 1, 
+                           paste(years[1], "to", tail(years, 1)),
+                           years[1])
       
       # Create a summary table HTML
       html_table <- '<table class="table table-striped table-bordered">'
@@ -59,10 +56,10 @@ fullDataServer <- function(id, filtered_data) {
       
       # Add summary rows
       html_table <- paste0(html_table, '<tr><td>Fiscal Year(s)</td><td class="text-right">', year_range, '</td></tr>')
-      html_table <- paste0(html_table, '<tr><td>Total Number of Gifts</td><td class="text-right">', format(total_gifts, big.mark = ","), '</td></tr>')
-      html_table <- paste0(html_table, '<tr><td>Total Gift Amount</td><td class="text-right">', format_currency(total_amount), '</td></tr>')
-      html_table <- paste0(html_table, '<tr><td>Unique Constituents</td><td class="text-right">', format(total_constituents, big.mark = ","), '</td></tr>')
-      html_table <- paste0(html_table, '<tr><td>Average Gift Size</td><td class="text-right">', format_currency(avg_gift_size), '</td></tr>')
+      html_table <- paste0(html_table, '<tr><td>Total Number of Gifts</td><td class="text-right">', format(stats$total_gifts, big.mark = ","), '</td></tr>')
+      html_table <- paste0(html_table, '<tr><td>Total Gift Amount</td><td class="text-right">', format_currency(stats$total_amount), '</td></tr>')
+      html_table <- paste0(html_table, '<tr><td>Unique Constituents</td><td class="text-right">', format(stats$total_constituents, big.mark = ","), '</td></tr>')
+      html_table <- paste0(html_table, '<tr><td>Average Gift Size</td><td class="text-right">', format_currency(stats$avg_gift_size), '</td></tr>')
       
       html_table <- paste0(html_table, '</tbody></table>')
       

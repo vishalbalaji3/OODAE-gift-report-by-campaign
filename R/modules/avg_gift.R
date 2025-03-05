@@ -23,7 +23,7 @@ avgGiftUI <- function(id) {
 }
 
 # Server Function
-avgGiftServer <- function(id, filtered_data) {
+avgGiftServer <- function(id, filtered_data, fiscal_years, summary_stats) {
   moduleServer(id, function(input, output, session) {
     
     # Reactive expression for processed data
