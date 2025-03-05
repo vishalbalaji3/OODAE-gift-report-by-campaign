@@ -8,6 +8,9 @@ library(shinycssloaders)
 library(writexl)
 library(scales)
 
+# Source configuration file first
+source("config.R")
+
 # Source data preparation
 source("data_prep.R")
 

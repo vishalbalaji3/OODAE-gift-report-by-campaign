@@ -11,10 +11,10 @@ server <- function(input, output, session) {
   data_file_info <- file.info("data/AllGifts.CSV")
   data_last_modified <- data_file_info$mtime
   
-  # Output the last updated text
+  # Output the last updated text using date format from config
   output$lastUpdatedText <- renderText({
-    paste("Data last updated:", format(data_last_modified, "%B %d, %Y at %I:%M %p"),
-          "| Dashboard refreshed:", format(app_start_time, "%B %d, %Y at %I:%M %p"))
+    paste("Data last updated:", format(data_last_modified, config$date_format$display),
+          "| Dashboard refreshed:", format(app_start_time, config$date_format$display))
   })
   
   # Filtered data reactive expression

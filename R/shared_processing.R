@@ -74,7 +74,7 @@ create_summary_table <- function(data, id_col, value_col, percent_col = NULL,
     row <- data[i, ]
     
     # Format value
-    formatted_value <- format_fn(row[[value_col_idx]])
+    formatted_value <- format_fn(as.numeric(row[[value_col_idx]]))
     
     # Build row HTML
     html_table <- paste0(html_table, '<tr>',

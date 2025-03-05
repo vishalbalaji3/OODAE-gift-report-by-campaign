@@ -8,7 +8,7 @@ fundAnalysisUI <- function(id) {
   tagList(
     fluidRow(
       column(12,
-             div(style = "background-color: #f7f7f7; padding: 15px; border-radius: 5px; margin-bottom: 20px;",
+             div(style = config$ui$panel$style,
                  h4("Top Funds Summary"),
                  uiOutput(ns("fundAnalysisSummary"))
              )
@@ -20,7 +20,7 @@ fundAnalysisUI <- function(id) {
         withSpinner(DTOutput(ns("fundAnalysisTable")))),
     
     # Download buttons
-    div(style = "margin-top: 15px;",
+    div(style = paste0("margin-top: ", config$ui$spacing$margin, ";"),
         downloadButton(ns("download_csv"), "Download Full CSV"),
         downloadButton(ns("download_excel"), "Download Full Excel")
     )

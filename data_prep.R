@@ -6,7 +6,11 @@ library(DT)
 library(shiny)
 library(dplyr)
 
-ConsCodeHierarchy <- c("UMMC Alumni", "UMMC Affilate", "Organization", "Individuals", "Other")
+# Source the config file to get configuration values
+source("config.R")
+
+# Get constituency hierarchy from config
+ConsCodeHierarchy <- config$constituency$hierarchy
 
 get_primary_code <- function(codes, hierarchy) {
   for(h in hierarchy) {
@@ -21,7 +25,7 @@ FullData <- read_csv("data/AllGifts.CSV",
                      col_types = cols(.default = "c", 
                                       'Key Indicator' = "f", 
                                       'Constituency Code' = "f", 
-                                      'Gift Date' = col_date("%m/%d/%Y"), 
+                                      'Gift Date' = col_date(config$date_format$input), 
                                       'Gift Type' = "f",
                                       'Gift Subtype' = "f",
                                       'Gift Amount' = col_number(),
@@ -29,34 +33,10 @@ FullData <- read_csv("data/AllGifts.CSV",
                                       'Gift Pledge Balance' = col_number(),
                                       'Fund Split Amount' = col_number()
                      )) %>%
-  mutate(`Constituency Code` = fct_recode(`Constituency Code`,
-                                          "UMMC Alumni" = "Alumni",
-                                          "UMMC Affilate" = "Board Member",
-                                          "Organization" = "Corporation",
-                                          "Organization" = "Estate / Trust",
-                                          "UMMC Affilate" = "Faculty/Staff",
-                                          "Organization" = "Foundation",
-                                          "Individuals" = "Friend",
-                                          "Organization" = "Organization",
-                                          "Other" = "Peer-to-Peer Fundraiser",
-                                          "UMMC Alumni" = "Resident/Fellow",
-                                          "UMMC Affilate" = "Student",
-                                          "Individuals" = "Tribute",
-                                          "UMMC Affilate" = "University Of Mississippi Medical Center",
-                                          "UMMC Affilate" = "The MIND Center Community Advisory Board",
-                                          "UMMC Affilate" = "UMMC Advisory Council",
-                                          "UMMC Affilate" = "CCRI Campaign Committee Member",
-                                          "Other" = "CCRI",
-                                          "Other" = "Guardian Society Member",
-                                          "UMMC Affilate" = "UM Foundation Board"
-  ),
-  `Gift Type` = fct_recode(`Gift Type`,
-                           "Cash" = "Cash",
-                           "Cash" = "Recurring Gift Pay-Cash",
-                           "Stock/Property" = "Stock/Property",
-                           "Planned Gift" = "Planned Gift",
-                           "Pledge" = "Pledge"
-  )) %>%
+  # Use constituency mapping from config
+  mutate(`Constituency Code` = fct_recode(`Constituency Code`, !!!config$constituency$mapping),
+         # Use gift type mapping from config
+         `Gift Type` = fct_recode(`Gift Type`, !!!config$gift_type$mapping)) %>%
   group_by(`Constituent ID`) %>%
   mutate(
     `Primary Constituency Code` = get_primary_code(`Constituency Code`, ConsCodeHierarchy),
@@ -72,7 +52,7 @@ FullData <- read_csv("data/AllGifts.CSV",
     )
   ) %>%
   mutate(`Fiscal Year` = format(`Fiscal Year`, "%Y")    # Format to show only year
-         ) %>%
+  ) %>%
   select(-`Constituency Code`) %>%
   distinct() %>%
   ungroup() %>%

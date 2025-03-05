@@ -8,7 +8,7 @@ donorLevelsUI <- function(id) {
   tagList(
     fluidRow(
       column(12,
-             div(style = "background-color: #f7f7f7; padding: 15px; border-radius: 5px; margin-bottom: 20px;",
+             div(style = config$ui$panel$style,
                  h4("Donor Levels Summary"),
                  uiOutput(ns("donorLevelsSummary"))
              )
@@ -18,7 +18,7 @@ donorLevelsUI <- function(id) {
     # First table - Number of Donors
     fluidRow(
       column(12, 
-             div(style = "background-color: #f7f7f7; padding: 15px; border-radius: 5px; margin-bottom: 20px;",
+             div(style = config$ui$panel$style,
                  h4("Number of Donors by Level"),
                  withSpinner(DTOutput(ns("donorCountTable")))
              )
@@ -27,7 +27,7 @@ donorLevelsUI <- function(id) {
     # Second table - Donation Amounts
     fluidRow(
       column(12, 
-             div(style = "background-color: #f7f7f7; padding: 15px; border-radius: 5px; margin-bottom: 20px;",
+             div(style = config$ui$panel$style,
                  h4("Donation Amount by Level"),
                  withSpinner(DTOutput(ns("donorAmountTable")))
              )
@@ -37,7 +37,7 @@ donorLevelsUI <- function(id) {
     # Download buttons
     fluidRow(
       column(12,
-             div(style = "margin-top: 15px;"),
+             div(style = paste0("margin-top: ", config$ui$spacing$margin, ";")),
              downloadButton(ns("download_csv"), "Download Full CSV"),
              downloadButton(ns("download_excel"), "Download Full Excel")
       )

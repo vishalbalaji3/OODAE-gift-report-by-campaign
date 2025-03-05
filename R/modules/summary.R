@@ -8,7 +8,7 @@ summaryStatisticsUI <- function(id) {
   tagList(
     fluidRow(
       column(12,
-             div(style = "background-color: #f7f7f7; padding: 15px; border-radius: 5px; margin-bottom: 20px;",
+             div(style = config$ui$panel$style,
                  uiOutput(ns("summaryHeading")),
                  uiOutput(ns("giftDistSummary"))
              )
@@ -20,7 +20,7 @@ summaryStatisticsUI <- function(id) {
         withSpinner(DTOutput(ns("summaryTable")))),
     
     # Download buttons
-    div(style = "margin-top: 15px;",
+    div(style = paste0("margin-top: ", config$ui$spacing$margin, ";"),
         downloadButton(ns("download_csv"), "Download Full CSV"),
         downloadButton(ns("download_excel"), "Download Full Excel")
     )
@@ -33,7 +33,12 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
     
     # Process summary data
     processed_data <- reactive({
-      process_summary_data(filtered_data())
+      # Ensure all Fund Split Amount values are numeric
+      data <- filtered_data() %>%
+        mutate(`Fund Split Amount` = as.numeric(`Fund Split Amount`))
+      
+      # Then process the data
+      process_summary_data(data)
     })
     
     # Dynamic heading for the Gift Range Distribution Summary
@@ -81,8 +86,12 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
       # Use the most recent year if no specific filters selected
       most_recent_year <- tail(fiscal_years, 1)
       
+      # Make sure data has numeric Fund Split Amount
+      gift_data <- filtered_data() %>%
+        mutate(`Fund Split Amount` = as.numeric(`Fund Split Amount`))
+      
       # Process the gift distribution data for the summary
-      dist_data <- process_gift_distribution_data(filtered_data())
+      dist_data <- process_gift_distribution_data(gift_data)
       
       # Create a summary table HTML
       html_table <- '<table class="table table-striped table-bordered">'
@@ -98,7 +107,10 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
         for(i in 1:nrow(dist_data)) {
           row <- dist_data[i, ]
           gift_count <- row$Total_Gifts
-          amount <- format_currency(row$Total_Amount)
+          
+          # Ensure amount is numeric before formatting
+          amount_value <- as.numeric(row$Total_Amount)
+          amount <- format_currency(amount_value)
           
           html_table <- paste0(html_table, '<tr>',
                                '<td>', row$Gift_Range, '</td>',
@@ -109,7 +121,7 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
         
         # Add totals row
         total_gifts <- sum(dist_data$Total_Gifts, na.rm = TRUE)
-        total_amount <- sum(dist_data$Total_Amount, na.rm = TRUE)
+        total_amount <- sum(as.numeric(dist_data$Total_Amount), na.rm = TRUE)
       } else {
         # Use only the most recent year data
         gift_count_col <- paste0("Number_of_Gifts_", most_recent_year)
@@ -124,7 +136,10 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
         for(i in 1:nrow(dist_data)) {
           row <- dist_data[i, ]
           gift_count <- if(gift_count_col %in% names(row)) row[[gift_count_col]] else 0
-          amount <- if(amount_col %in% names(row)) format_currency(row[[amount_col]]) else "$0"
+          
+          # Ensure amount is numeric before formatting
+          amount_value <- if(amount_col %in% names(row)) as.numeric(row[[amount_col]]) else 0
+          amount <- format_currency(amount_value)
           
           html_table <- paste0(html_table, '<tr>',
                                '<td>', row$Gift_Range, '</td>',
@@ -135,13 +150,16 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
         
         # Add totals row
         total_gifts <- sum(dist_data[[gift_count_col]], na.rm = TRUE)
-        total_amount <- sum(dist_data[[amount_col]], na.rm = TRUE)
+        total_amount <- sum(as.numeric(dist_data[[amount_col]]), na.rm = TRUE)
       }
+      
+      # Format total amount
+      formatted_total <- format_currency(total_amount)
       
       html_table <- paste0(html_table, '<tr class="info">',
                            '<th>Total</th>',
                            '<th class="text-right">', total_gifts, '</th>',
-                           '<th class="text-right">', format_currency(total_amount), '</th>',
+                           '<th class="text-right">', formatted_total, '</th>',
                            '</tr></tbody></table>')
       
       HTML(html_table)
@@ -150,6 +168,11 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
     # Summary table
     output$summaryTable <- renderDT({
       data <- processed_data()
+      
+      # Make sure all numeric columns are actually numeric
+      data <- data %>%
+        mutate(across(where(is.numeric), as.numeric))
+      
       currency_cols <- which(sapply(data, is.numeric)) - 1
       create_datatable(data, currency_cols)
     })

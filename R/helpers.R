@@ -2,19 +2,65 @@
 
 # Format currency values with abbreviations for large numbers
 format_currency <- function(x) {
-  ifelse(
-    is.na(x) | x == 0,
-    "$0",
-    ifelse(
-      abs(x) >= 1e6,
-      sprintf("$%.1fM", x / 1e6),
-      sprintf("$%s", format(round(x, 0), big.mark = ","))
-    )
-  )
+  # Get currency formatting settings from config
+  currency_config <- config$format$currency
+  
+  # For vectors - process each element
+  if(length(x) > 1) {
+    return(sapply(x, format_currency))
+  }
+  
+  # Force numeric conversion and handle edge cases
+  tryCatch({
+    # First try direct conversion
+    x_numeric <- as.numeric(x)
+    
+    # Check if conversion worked
+    if(is.na(x_numeric) && !is.na(x)) {
+      # If conversion failed but x wasn't NA, try parsing with special handling
+      x_str <- as.character(x)
+      # Remove any non-numeric characters except decimal point
+      x_str <- gsub("[^0-9.-]", "", x_str)
+      x_numeric <- as.numeric(x_str)
+    }
+    
+    # Use the converted value
+    x <- x_numeric
+  }, error = function(e) {
+    # If all else fails, return "$0" for unconvertible values
+    return("$0")
+  })
+  
+  # Check for NA or zero
+  if (is.na(x) || x == 0) return("$0")
+  
+  # Apply abbreviations based on value size
+  if (abs(x) >= 1e9) {
+    # Billions
+    return(sprintf("$%.1fB", x / 1e9))
+  } else if (abs(x) >= 1e6) {
+    # Millions
+    return(sprintf("$%.1fM", x / 1e6))
+  } else if (abs(x) >= 1e3 && isTRUE(currency_config$abbreviateThousands)) {
+    # Thousands (if enabled)
+    return(sprintf("$%.1fK", x / 1e3))
+  } else {
+    # Regular formatting with commas
+    if (isTRUE(currency_config$useThousandsSeparator)) {
+      return(sprintf(currency_config$standardFormat, 
+                     format(round(x, currency_config$decimalPlaces), big.mark = ",")))
+    } else {
+      return(sprintf(currency_config$standardFormat, 
+                     format(round(x, currency_config$decimalPlaces))))
+    }
+  }
 }
 
 # Create standardized data tables
 create_datatable <- function(data, currency_cols = NULL) {
+  # Get table styling settings from config
+  table_config <- config$ui$table
+  
   display_data <- data
   
   if (!is.null(currency_cols)) {
@@ -27,14 +73,14 @@ create_datatable <- function(data, currency_cols = NULL) {
   datatable(
     display_data,
     options = list(
-      pageLength = 10,
-      scrollX = TRUE,
-      autoWidth = FALSE,
-      dom = 'lfrtip',
+      pageLength = table_config$pageLength,
+      scrollX = table_config$scrollX,
+      autoWidth = table_config$autoWidth,
+      dom = table_config$dom,
       columnDefs = list(list(targets = currency_cols, className = 'dt-right')),
       language = list(search = "Search:")
     ),
-    class = 'cell-border stripe',
+    class = table_config$class,
     filter = 'none',
     selection = 'none'
   )
