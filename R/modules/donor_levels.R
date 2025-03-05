@@ -1,53 +1,166 @@
-# Module Template
-# This is a template for creating Shiny modules
+# Donor Levels Module
 
 # UI Function
-moduleNameUI <- function(id) {
+donorLevelsUI <- function(id) {
   ns <- NS(id)
   
   tagList(
-    h4("Module Title"),
-    
     fluidRow(
       column(12,
              div(style = "background-color: #f7f7f7; padding: 15px; border-radius: 5px; margin-bottom: 20px;",
-                 uiOutput(ns("moduleSummary"))
+                 h4("Donor Levels Summary"),
+                 uiOutput(ns("donorLevelsSummary"))
              )
       )
     ),
-    
-    downloadButton(ns("download_csv"), "Download Full CSV"),
-    downloadButton(ns("download_excel"), "Download Full Excel"),
-    
-    div(style = 'overflow-x: scroll',
-        withSpinner(DTOutput(ns("moduleTable"))))
+    # First table - Number of Donors
+    fluidRow(
+      column(12, 
+             div(style = "background-color: #f7f7f7; padding: 15px; border-radius: 5px; margin-bottom: 20px;",
+                 h4("Number of Donors by Level"),
+                 withSpinner(DTOutput(ns("donorCountTable")))
+             )
+      )
+    ),
+    # Second table - Donation Amounts
+    fluidRow(
+      column(12, 
+             div(style = "background-color: #f7f7f7; padding: 15px; border-radius: 5px; margin-bottom: 20px;",
+                 h4("Donation Amount by Level"),
+                 withSpinner(DTOutput(ns("donorAmountTable")))
+             )
+      )
+    ),
+    fluidRow(
+      column(12,
+             div(style = "margin-top: 20px;"),
+             downloadButton(ns("download_csv"), "Download Full CSV"),
+             downloadButton(ns("download_excel"), "Download Full Excel")
+      )
+    )
   )
 }
 
 # Server Function
-moduleNameServer <- function(id, filtered_data) {
+donorLevelsServer <- function(id, filtered_data) {
   moduleServer(id, function(input, output, session) {
     
     # Reactive expression for processed data
     processed_data <- reactive({
-      # Process the data here
-      # Return processed data
+      process_donor_levels_data(filtered_data())
     })
     
-    # Render summary
-    output$moduleSummary <- renderUI({
-      # Create HTML summary table
-      HTML("Summary content goes here")
+    # Donor Levels Summary
+    output$donorLevelsSummary <- renderUI({
+      # Get donor level data
+      donor_data <- process_donor_levels_summary(filtered_data())
+      
+      if (nrow(donor_data) == 0) {
+        return(HTML("<p>No data available for the selected filters.</p>"))
+      }
+      
+      # Create a summary table HTML
+      html_table <- '<table class="table table-striped table-bordered">'
+      html_table <- paste0(html_table, '<thead><tr>',
+                           '<th>Donor Level</th>',
+                           '<th class="text-right"># of Donors</th>',
+                           '<th class="text-right">Total Amount</th>',
+                           '<th class="text-right">% of Total</th>',
+                           '</tr></thead><tbody>')
+      
+      # Calculate grand total for percentage calculation
+      grand_total <- sum(donor_data$Total_Amount, na.rm = TRUE)
+      total_donors <- sum(donor_data$Number_of_Donors, na.rm = TRUE)
+      
+      # Add rows for each donor level
+      for(i in 1:nrow(donor_data)) {
+        row <- donor_data[i, ]
+        percent <- sprintf("%.1f%%", (row$Total_Amount / grand_total) * 100)
+        
+        html_table <- paste0(html_table, '<tr>',
+                             '<td>', row$Donor_Level, '</td>',
+                             '<td class="text-right">', row$Number_of_Donors, '</td>',
+                             '<td class="text-right">', format_currency(row$Total_Amount), '</td>',
+                             '<td class="text-right">', percent, '</td>',
+                             '</tr>')
+      }
+      
+      # Add totals row
+      html_table <- paste0(html_table, '<tr class="info">',
+                           '<th>Total</th>',
+                           '<th class="text-right">', total_donors, '</th>',
+                           '<th class="text-right">', format_currency(grand_total), '</th>',
+                           '<th class="text-right">100.0%</th>',
+                           '</tr></tbody></table>')
+      
+      HTML(html_table)
     })
     
-    # Render data table
-    output$moduleTable <- renderDT({
+    # Donor Count Table
+    output$donorCountTable <- renderDT({
+      data <- processed_data()
+      
+      if (nrow(data) == 0 || ncol(data) <= 1) {
+        return(datatable(data.frame(Message = "No data available for the selected filters."),
+                         options = list(dom = 't')))
+      }
+      
+      # Extract only donor count columns
+      donor_cols <- c("Donor_Level", grep("^Donors_", names(data), value = TRUE), "Total_Donors")
+      display_data <- data[, donor_cols]
+      
+      # Rename columns for better readability
+      col_names <- names(display_data)
+      for (i in seq_along(col_names)) {
+        if (startsWith(col_names[i], "Donors_")) {
+          fiscal_year <- substr(col_names[i], 8, nchar(col_names[i]))
+          col_names[i] <- fiscal_year
+        }
+      }
+      names(display_data) <- col_names
+      
+      # Rename the total column
+      names(display_data)[names(display_data) == "Total_Donors"] <- "Total"
+      
       # Create datatable
-      create_datatable(processed_data())
+      create_datatable(display_data)
+    })
+    
+    # Donor Amount Table
+    output$donorAmountTable <- renderDT({
+      data <- processed_data()
+      
+      if (nrow(data) == 0 || ncol(data) <= 1) {
+        return(datatable(data.frame(Message = "No data available for the selected filters."),
+                         options = list(dom = 't')))
+      }
+      
+      # Extract only amount columns
+      amount_cols <- c("Donor_Level", grep("^Amount_", names(data), value = TRUE), "Total_Amount")
+      display_data <- data[, amount_cols]
+      
+      # Rename columns for better readability
+      col_names <- names(display_data)
+      for (i in seq_along(col_names)) {
+        if (startsWith(col_names[i], "Amount_")) {
+          fiscal_year <- substr(col_names[i], 8, nchar(col_names[i]))
+          col_names[i] <- fiscal_year
+        }
+      }
+      names(display_data) <- col_names
+      
+      # Rename the total column
+      names(display_data)[names(display_data) == "Total_Amount"] <- "Total"
+      
+      # All columns except Donor_Level should be formatted as currency
+      currency_cols <- which(names(display_data) != "Donor_Level") - 1
+      
+      # Create datatable
+      create_datatable(display_data, currency_cols)
     })
     
     # Create download handlers
-    downloads <- create_download_handlers("module_data", processed_data, session)
+    downloads <- create_download_handlers("donor_levels_data", processed_data, session)
     
     # Assign download handlers
     output$download_csv <- downloads$csv

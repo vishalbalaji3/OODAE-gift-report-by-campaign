@@ -1,17 +1,15 @@
-# Module Template
-# This is a template for creating Shiny modules
+# Full Data Module
 
 # UI Function
-moduleNameUI <- function(id) {
+fullDataUI <- function(id) {
   ns <- NS(id)
   
   tagList(
-    h4("Module Title"),
-    
     fluidRow(
       column(12,
              div(style = "background-color: #f7f7f7; padding: 15px; border-radius: 5px; margin-bottom: 20px;",
-                 uiOutput(ns("moduleSummary"))
+                 h4("Data Overview"),
+                 uiOutput(ns("fullDataSummary"))
              )
       )
     ),
@@ -20,34 +18,67 @@ moduleNameUI <- function(id) {
     downloadButton(ns("download_excel"), "Download Full Excel"),
     
     div(style = 'overflow-x: scroll',
-        withSpinner(DTOutput(ns("moduleTable"))))
+        withSpinner(DTOutput(ns("fullDataTable"))))
   )
 }
 
 # Server Function
-moduleNameServer <- function(id, filtered_data) {
+fullDataServer <- function(id, filtered_data) {
   moduleServer(id, function(input, output, session) {
     
-    # Reactive expression for processed data
-    processed_data <- reactive({
-      # Process the data here
-      # Return processed data
-    })
+    # Use the filtered data directly
+    processed_data <- filtered_data
     
-    # Render summary
-    output$moduleSummary <- renderUI({
-      # Create HTML summary table
-      HTML("Summary content goes here")
+    # Full Data Summary
+    output$fullDataSummary <- renderUI({
+      # Get data
+      data <- filtered_data()
+      
+      if (nrow(data) == 0) {
+        return(HTML("<p>No data available for the selected filters.</p>"))
+      }
+      
+      # Calculate summary statistics
+      total_gifts <- nrow(data)
+      total_amount <- sum(data$`Fund Split Amount`, na.rm = TRUE)
+      total_constituents <- n_distinct(data$`Constituent ID`)
+      avg_gift_size <- total_amount / total_gifts
+      
+      # Get fiscal year range
+      fiscal_years <- sort(unique(data$`Fiscal Year`))
+      year_range <- ifelse(length(fiscal_years) > 1, 
+                           paste(fiscal_years[1], "to", tail(fiscal_years, 1)),
+                           fiscal_years[1])
+      
+      # Create a summary table HTML
+      html_table <- '<table class="table table-striped table-bordered">'
+      html_table <- paste0(html_table, '<thead><tr>',
+                           '<th>Metric</th>',
+                           '<th class="text-right">Value</th>',
+                           '</tr></thead><tbody>')
+      
+      # Add summary rows
+      html_table <- paste0(html_table, '<tr><td>Fiscal Year(s)</td><td class="text-right">', year_range, '</td></tr>')
+      html_table <- paste0(html_table, '<tr><td>Total Number of Gifts</td><td class="text-right">', format(total_gifts, big.mark = ","), '</td></tr>')
+      html_table <- paste0(html_table, '<tr><td>Total Gift Amount</td><td class="text-right">', format_currency(total_amount), '</td></tr>')
+      html_table <- paste0(html_table, '<tr><td>Unique Constituents</td><td class="text-right">', format(total_constituents, big.mark = ","), '</td></tr>')
+      html_table <- paste0(html_table, '<tr><td>Average Gift Size</td><td class="text-right">', format_currency(avg_gift_size), '</td></tr>')
+      
+      html_table <- paste0(html_table, '</tbody></table>')
+      
+      HTML(html_table)
     })
     
     # Render data table
-    output$moduleTable <- renderDT({
-      # Create datatable
-      create_datatable(processed_data())
+    output$fullDataTable <- renderDT({
+      data <- filtered_data() %>% arrange(`Fiscal Year`)
+      currency_cols <- which(names(data) %in% c("Fund Split Amount", "Gift Amount", 
+                                                "Gift Receipt Amount", "Gift Pledge Balance")) - 1
+      create_datatable(data, currency_cols)
     })
     
     # Create download handlers
-    downloads <- create_download_handlers("module_data", processed_data, session)
+    downloads <- create_download_handlers("full_data", filtered_data, session)
     
     # Assign download handlers
     output$download_csv <- downloads$csv
