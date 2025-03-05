@@ -1,0 +1,88 @@
+library(tidyverse)
+library(readr)
+library(writexl)
+library(flexdashboard)
+library(DT)
+library(shiny)
+library(dplyr)
+
+ConsCodeHierarchy <- c("UMMC Alumni", "UMMC Affilate", "Organization", "Individuals", "Other")
+
+get_primary_code <- function(codes, hierarchy) {
+  for(h in hierarchy) {
+    if(h %in% codes) {
+      return(h)
+    }
+  }
+  return(NA)
+}
+
+FullData <- read_csv("data/AllGifts.CSV", 
+                     col_types = cols(.default = "c", 
+                                      'Key Indicator' = "f", 
+                                      'Constituency Code' = "f", 
+                                      'Gift Date' = col_date("%m/%d/%Y"), 
+                                      'Gift Type' = "f",
+                                      'Gift Subtype' = "f",
+                                      'Gift Amount' = col_number(),
+                                      'Gift Receipt Amount' = col_number(),
+                                      'Gift Pledge Balance' = col_number(),
+                                      'Fund Split Amount' = col_number()
+                     )) %>%
+  mutate(`Constituency Code` = fct_recode(`Constituency Code`,
+                                          "UMMC Alumni" = "Alumni",
+                                          "UMMC Affilate" = "Board Member",
+                                          "Organization" = "Corporation",
+                                          "Organization" = "Estate / Trust",
+                                          "UMMC Affilate" = "Faculty/Staff",
+                                          "Organization" = "Foundation",
+                                          "Individuals" = "Friend",
+                                          "Organization" = "Organization",
+                                          "Other" = "Peer-to-Peer Fundraiser",
+                                          "UMMC Alumni" = "Resident/Fellow",
+                                          "UMMC Affilate" = "Student",
+                                          "Individuals" = "Tribute",
+                                          "UMMC Affilate" = "University Of Mississippi Medical Center",
+                                          "UMMC Affilate" = "The MIND Center Community Advisory Board",
+                                          "UMMC Affilate" = "UMMC Advisory Council",
+                                          "UMMC Affilate" = "CCRI Campaign Committee Member",
+                                          "Other" = "CCRI",
+                                          "Other" = "Guardian Society Member",
+                                          "UMMC Affilate" = "UM Foundation Board"
+  ),
+  `Gift Type` = fct_recode(`Gift Type`,
+                           "Cash" = "Cash",
+                           "Cash" = "Recurring Gift Pay-Cash",
+                           "Stock/Property" = "Stock/Property",
+                           "Planned Gift" = "Planned Gift",
+                           "Pledge" = "Pledge"
+  )) %>%
+  group_by(`Constituent ID`) %>%
+  mutate(
+    `Primary Constituency Code` = get_primary_code(`Constituency Code`, ConsCodeHierarchy),
+    `Fiscal Year` = as.Date(                        # Convert to Date
+      paste0(                                     # Create year string
+        ifelse(
+          month(`Gift Date`) >= 7,
+          year(`Gift Date`) + 1,
+          year(`Gift Date`)
+        ),
+        "-01-01"                               # Add month and day for date conversion
+      )
+    )
+  ) %>%
+  mutate(`Fiscal Year` = format(`Fiscal Year`, "%Y")    # Format to show only year
+         ) %>%
+  select(-`Constituency Code`) %>%
+  distinct() %>%
+  ungroup() %>%
+  mutate(`Primary Constituency Code` = factor(`Primary Constituency Code`, levels = ConsCodeHierarchy, ordered = TRUE)) %>%
+  filter(`Gift Amount` != 0)
+
+FundList <- read_csv("data/FundList.CSV")
+FullData <- merge(FullData, FundList, by = "Fund ID", all.x = TRUE) %>% select(-`Campaign ID`) %>% rename("Campaign ID" = "Fund Default Campaign ID")
+
+# Get the last modified date of the data file
+data_file_info <- file.info("data/AllGifts.CSV")
+data_last_modified <- data_file_info$mtime
+attr(FullData, "last_updated") <- data_last_modified
