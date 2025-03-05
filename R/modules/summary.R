@@ -4,6 +4,7 @@
 summaryStatisticsUI <- function(id) {
   ns <- NS(id)
   
+  # Summary section
   tagList(
     fluidRow(
       column(12,
@@ -13,10 +14,16 @@ summaryStatisticsUI <- function(id) {
              )
       )
     ),
-    downloadButton(ns("download_csv"), "Download Full CSV"),
-    downloadButton(ns("download_excel"), "Download Full Excel"),
+    
+    # Table section
     div(style = 'overflow-x: scroll',
-        withSpinner(DTOutput(ns("summaryTable"))))
+        withSpinner(DTOutput(ns("summaryTable")))),
+    
+    # Download buttons
+    div(style = "margin-top: 15px;",
+        downloadButton(ns("download_csv"), "Download Full CSV"),
+        downloadButton(ns("download_excel"), "Download Full Excel")
+    )
   )
 }
 

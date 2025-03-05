@@ -4,6 +4,7 @@
 donorLevelsUI <- function(id) {
   ns <- NS(id)
   
+  # Summary section
   tagList(
     fluidRow(
       column(12,
@@ -13,6 +14,7 @@ donorLevelsUI <- function(id) {
              )
       )
     ),
+    
     # First table - Number of Donors
     fluidRow(
       column(12, 
@@ -31,9 +33,11 @@ donorLevelsUI <- function(id) {
              )
       )
     ),
+    
+    # Download buttons
     fluidRow(
       column(12,
-             div(style = "margin-top: 20px;"),
+             div(style = "margin-top: 15px;"),
              downloadButton(ns("download_csv"), "Download Full CSV"),
              downloadButton(ns("download_excel"), "Download Full Excel")
       )

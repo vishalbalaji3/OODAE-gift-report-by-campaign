@@ -4,6 +4,7 @@
 giftDistUI <- function(id) {
   ns <- NS(id)
   
+  # Summary section
   tagList(
     fluidRow(
       column(12, 
@@ -13,7 +14,9 @@ giftDistUI <- function(id) {
              )
       )
     ),
-    hr(),
+    hr(), # Horizontal rule
+    
+    # Table Section
     fluidRow(
       column(12, 
              div(style = "background-color: #f7f7f7; padding: 15px; border-radius: 5px; margin-bottom: 20px;",
@@ -22,9 +25,11 @@ giftDistUI <- function(id) {
              )
       )
     ),
+    
+    # Download buttons
     fluidRow(
       column(12,
-             div(style = "margin-top: 20px;"),
+             div(style = "margin-top: 15px;"),
              downloadButton(ns("download_csv"), "Download Full CSV"),
              downloadButton(ns("download_excel"), "Download Full Excel")
       )

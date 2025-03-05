@@ -62,7 +62,7 @@ create_summary_table <- function(data, id_col, value_col, percent_col = NULL,
   
   # Calculate total if needed for percentages
   value_col_idx <- which(names(data) == "Total")
-  id_col_idx <- which(names(data) == names(data)[1])
+  id_col_idx <- which(names(data) == id_col)
   
   grand_total <- sum(data$Total, na.rm = TRUE)
   
