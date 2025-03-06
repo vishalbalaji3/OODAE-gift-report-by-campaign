@@ -34,16 +34,13 @@ format_currency <- function(x) {
   # Check for NA or zero
   if (is.na(x) || x == 0) return("$0")
   
-  # Apply abbreviations based on value size
-  if (abs(x) >= 1e9) {
-    # Billions
-    return(sprintf("$%.1fB", x / 1e9))
-  } else if (abs(x) >= 1e6) {
+  # Apply abbreviations based on value size and configuration settings
+  if (abs(x) >= currency_config$abbreviateThreshold && isTRUE(currency_config$abbreviateMillions)) {
     # Millions
-    return(sprintf("$%.1fM", x / 1e6))
-  } else if (abs(x) >= 1e3 && isTRUE(currency_config$abbreviateThousands)) {
-    # Thousands (if enabled)
-    return(sprintf("$%.1fK", x / 1e3))
+    return(sprintf(currency_config$millionsFormat, x / 1e6))
+  } else if (abs(x) >= currency_config$thousandsThreshold && isTRUE(currency_config$abbreviateThousands)) {
+    # Thousands
+    return(sprintf(currency_config$thousandsFormat, x / 1e3))
   } else {
     # Regular formatting with commas
     if (isTRUE(currency_config$useThousandsSeparator)) {
