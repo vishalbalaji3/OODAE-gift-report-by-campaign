@@ -41,8 +41,6 @@ process_data_by_group <- function(filtered_data, group_cols, value_col = "Fund S
 }
 
 # Create an HTML summary table (reduces duplication in UI rendering)
-# In R/shared_processing.R
-# Update create_summary_table to handle overall_total parameter
 create_summary_table <- function(data, id_col, value_col, percent_col = NULL, 
                                  total_row = TRUE, format_fn = format_currency,
                                  overall_total = NULL) {

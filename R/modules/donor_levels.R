@@ -4,44 +4,41 @@
 donorLevelsUI <- function(id) {
   ns <- NS(id)
   
-  # Summary section
   tagList(
     fluidRow(
       column(12,
-             div(style = config$ui$panel$style,
-                 h4("Donor Levels Summary"),
-                 uiOutput(ns("donorLevelsSummary"))
+             div(class = "panel panel-default",
+                 div(class = "panel-heading", 
+                     h4("Donor Levels Summary")),
+                 div(class = "panel-body",
+                     uiOutput(ns("donorLevelsSummary")))
              )
       )
     ),
     
-    # First table - Number of Donors
     fluidRow(
       column(12, 
-             div(style = config$ui$panel$style,
-                 h4("Number of Donors by Level"),
-                 withSpinner(DTOutput(ns("donorCountTable")))
-             )
-      )
-    ),
-    # Second table - Donation Amounts
-    fluidRow(
-      column(12, 
-             div(style = config$ui$panel$style,
-                 h4("Donation Amount by Level"),
-                 withSpinner(DTOutput(ns("donorAmountTable")))
+             div(class = "panel panel-default",
+                 div(class = "panel-heading", 
+                     h4("Number of Donors by Level")),
+                 div(class = "panel-body",
+                     withSpinner(DTOutput(ns("donorCountTable"))))
              )
       )
     ),
     
-    # Download buttons
     fluidRow(
-      column(12,
-             div(style = paste0("margin-top: ", config$ui$spacing$margin, ";")),
-             downloadButton(ns("download_csv"), "Download Full CSV"),
-             downloadButton(ns("download_excel"), "Download Full Excel")
+      column(12, 
+             div(class = "panel panel-default",
+                 div(class = "panel-heading", 
+                     h4("Donation Amount by Level")),
+                 div(class = "panel-body",
+                     withSpinner(DTOutput(ns("donorAmountTable"))))
+             )
       )
-    )
+    ),
+    
+    create_download_buttons(ns)
   )
 }
 

@@ -4,36 +4,32 @@
 giftDistUI <- function(id) {
   ns <- NS(id)
   
-  # Summary section
   tagList(
     fluidRow(
       column(12, 
-             div(style = config$ui$panel$style,
-                 h4("Gift Count by Range"),
-                 withSpinner(DTOutput(ns("giftCountTable")))
+             div(class = "panel panel-default",
+                 div(class = "panel-heading", 
+                     h4("Gift Count by Range")),
+                 div(class = "panel-body",
+                     withSpinner(DTOutput(ns("giftCountTable"))))
              )
       )
     ),
-    hr(), # Horizontal rule
     
-    # Table Section
+    hr(),
+    
     fluidRow(
       column(12, 
-             div(style = config$ui$panel$style,
-                 h4("Gift Amount by Range"),
-                 withSpinner(DTOutput(ns("giftAmountTable")))
+             div(class = "panel panel-default",
+                 div(class = "panel-heading", 
+                     h4("Gift Amount by Range")),
+                 div(class = "panel-body",
+                     withSpinner(DTOutput(ns("giftAmountTable"))))
              )
       )
     ),
     
-    # Download buttons
-    fluidRow(
-      column(12,
-             div(style = paste0("margin-top: ", config$ui$spacing$margin, ";")),
-             downloadButton(ns("download_csv"), "Download Full CSV"),
-             downloadButton(ns("download_excel"), "Download Full Excel")
-      )
-    )
+    create_download_buttons(ns)
   )
 }
 

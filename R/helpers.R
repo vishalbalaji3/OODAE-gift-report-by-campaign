@@ -55,9 +55,6 @@ format_currency <- function(x) {
 
 # Create standardized data tables
 create_datatable <- function(data, currency_cols = NULL) {
-  # Get table styling settings from config
-  table_config <- config$ui$table
-  
   display_data <- data
   
   if (!is.null(currency_cols)) {
@@ -70,14 +67,14 @@ create_datatable <- function(data, currency_cols = NULL) {
   datatable(
     display_data,
     options = list(
-      pageLength = table_config$pageLength,
-      scrollX = table_config$scrollX,
-      autoWidth = table_config$autoWidth,
-      dom = table_config$dom,
+      pageLength = 10,
+      scrollX = TRUE,
+      autoWidth = FALSE,
+      dom = 'lfrtip',
       columnDefs = list(list(targets = currency_cols, className = 'dt-right')),
       language = list(search = "Search:")
     ),
-    class = table_config$class,
+    class = 'table table-striped table-bordered',
     filter = 'none',
     selection = 'none'
   )
@@ -96,5 +93,13 @@ create_download_handlers <- function(id, data_reactive, session) {
       filename = function() output_name(".xlsx"),
       content = function(file) write_xlsx(data_reactive(), file)
     )
+  )
+}
+
+# Create download buttons
+create_download_buttons <- function(ns, csv_id = "download_csv", excel_id = "download_excel") {
+  div(class = "btn-group", style = "margin-top: 20px; margin-bottom: 30px;",
+      downloadButton(ns(csv_id), "Download Full CSV", class = "btn-primary"),
+      downloadButton(ns(excel_id), "Download Full Excel", class = "btn-primary")
   )
 }

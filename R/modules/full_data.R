@@ -4,26 +4,22 @@
 fullDataUI <- function(id) {
   ns <- NS(id)
   
-  # Summary section
   tagList(
     fluidRow(
       column(12,
-             div(style = config$ui$panel$style,
-                 h4("Data Overview"),
-                 uiOutput(ns("fullDataSummary"))
+             div(class = "panel panel-default",
+                 div(class = "panel-heading", 
+                     h4("Data Overview")),
+                 div(class = "panel-body",
+                     uiOutput(ns("fullDataSummary")))
              )
       )
     ),
     
-    # Table section
-    div(style = 'overflow-x: scroll',
+    div(class = "table-responsive",
         withSpinner(DTOutput(ns("fullDataTable")))),
     
-    # Download buttons
-    div(style = paste0("margin-top: ", config$ui$spacing$margin, ";"),
-        downloadButton(ns("download_csv"), "Download Full CSV"),
-        downloadButton(ns("download_excel"), "Download Full Excel")
-    )
+    create_download_buttons(ns)
   )
 }
 

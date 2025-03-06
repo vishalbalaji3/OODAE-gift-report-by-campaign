@@ -4,26 +4,22 @@
 fundSplitUI <- function(id) {
   ns <- NS(id)
   
-  # Summary section
   tagList(
     fluidRow(
       column(12,
-             div(style = config$ui$panel$style,
-                 h4("Fund Split by Constituency"),
-                 uiOutput(ns("fundSplitSummary"))
+             div(class = "panel panel-default",
+                 div(class = "panel-heading", 
+                     h4("Fund Split by Constituency")),
+                 div(class = "panel-body",
+                     uiOutput(ns("fundSplitSummary")))
              )
       )
     ),
     
-    # Table section
-    div(style = 'overflow-x: scroll',
+    div(class = "table-responsive",
         withSpinner(DTOutput(ns("fundSplitTable")))),
     
-    # Download buttons
-    div(style = paste0("margin-top: ", config$ui$spacing$margin, ";"),
-        downloadButton(ns("download_csv"), "Download Full CSV"),
-        downloadButton(ns("download_excel"), "Download Full Excel")
-    )
+    create_download_buttons(ns)
   )
 }
 

@@ -5,27 +5,22 @@
 moduleNameUI <- function(id) {
   ns <- NS(id)
   
-  # Summary section
   tagList(
-    h4("Module Title"),
-    
     fluidRow(
       column(12,
-             div(style = config$ui$panel$style,
-                 uiOutput(ns("moduleSummary"))
+             div(class = "panel panel-default",
+                 div(class = "panel-heading", 
+                     h4("Module Title")),
+                 div(class = "panel-body",
+                     uiOutput(ns("moduleSummary")))
              )
       )
     ),
     
-    # Table section
-    div(style = 'overflow-x: scroll',
+    div(class = "table-responsive",
         withSpinner(DTOutput(ns("moduleTable")))),
     
-    # Download buttons
-    div(style = paste0("margin-top: ", config$ui$spacing$margin, ";"),
-        downloadButton(ns("download_csv"), "Download Full CSV"),
-        downloadButton(ns("download_excel"), "Download Full Excel")
-    )
+    create_download_buttons(ns)
   )
 }
 

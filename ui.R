@@ -1,82 +1,52 @@
 # UI Definition
 ui <- fluidPage(
-  # Don't use built-in theme to avoid conflicts
-  theme = NULL,
+  # Use a built-in Shiny theme instead of custom CSS
+  theme = shinythemes::shinytheme(config$ui$theme),  # You can choose any theme like "cerulean", "united", "flatly", etc.
   
-  # CSS fro config file
-  tags$style(HTML(config$completeCSS())),
+  # Custom title panel with integrated update info
+  fluidRow(
+    column(12,
+           div(class = "page-header", style = "margin-top: 20px; margin-bottom: 20px; position: relative;",
+               h2("Campaign Data Analysis", style = "margin-bottom: 5px;"),
+               div(class = "text-muted", style = "font-size: 12px; font-style: italic;",
+                   textOutput("lastUpdatedText")
+               )
+           )
+    )
+  ),
   
-  # Simple title using titlePanel instead of styled div
-  titlePanel("Campaign Data Analysis"),
-  
-  # Container for the rest of the UI
+  # Filters section with Bootstrap styling
   div(
-    class = "container-fluid",
-    
-    # Add data last updated information
+    class = "well",
+    h4("Filter Data", class = "text-primary"),
     fluidRow(
-      column(12, 
-             div(class = "pull-right", 
-                 textOutput("lastUpdatedText"),
-                 style = paste0(
-                   "font-style: italic; ",
-                   "color: ", config$ui$colors$text, "; ",
-                   "opacity: 0.7; ",
-                   "margin-bottom: 15px;"
-                 ))
-      )
-    ),
-    
-    # Filters section with styling
-    div(
-      class = "filters-section",
-      h4("Filter Data", style = paste0("margin-top: 0; color: ", config$ui$colors$header, ";")),
-      fluidRow(
-        column(3, selectInput("campaignFilter", "Select Campaign ID:",
-                              choices = unique(FullData$`Campaign ID`),
-                              selected = unique(FullData$`Campaign ID`)[1])),
-        column(3, selectInput("giftTypeFilter", "Select Gift Type:",
-                              choices = levels(FullData$`Gift Type`),
-                              multiple = TRUE)),
-        column(3, selectInput("yearFilter", "Select Fiscal Years:",
-                              choices = sort(unique(FullData$`Fiscal Year`)),
-                              multiple = TRUE))
-      )
-    ),
-    
-    # Tab panel container
-    fluidRow(
-      column(12,
-             tabsetPanel(
-               id = "tabset",
-               # Summary Statistics tab
-               tabPanel("Summary Statistics", summaryStatisticsUI("summary")),
-               
-               # Fund Split by Constituency tab
-               tabPanel("Fund Split by Constituency", fundSplitUI("fundSplit")),
-               
-               # Fund Analysis tab
-               tabPanel("Fund Analysis", fundAnalysisUI("fundAnalysis")),
-               
-               # Unique Constituents tab
-               tabPanel("Unique Constituents", constituentsUI("constituents")),
-               
-               # Average Gift Size tab
-               tabPanel("Average Gift Size", avgGiftUI("avgGift")),
-               
-               # Top Donors tab
-               tabPanel("Top Donors", topDonorsUI("topDonors")),
-               
-               # Gift Size Distribution tab
-               tabPanel("Gift Size Distribution", giftDistUI("giftDist")),
-               
-               # Donor Levels tab
-               tabPanel("Donor Levels", donorLevelsUI("donorLevels")),
-               
-               # Full Data tab
-               tabPanel("Full Data", fullDataUI("fullData"))
-             )
-      )
+      column(3, selectInput("campaignFilter", "Select Campaign ID:",
+                            choices = unique(FullData$`Campaign ID`),
+                            selected = unique(FullData$`Campaign ID`)[1])),
+      column(3, selectInput("giftTypeFilter", "Select Gift Type:",
+                            choices = levels(FullData$`Gift Type`),
+                            multiple = TRUE)),
+      column(3, selectInput("yearFilter", "Select Fiscal Years:",
+                            choices = sort(unique(FullData$`Fiscal Year`)),
+                            multiple = TRUE))
+    )
+  ),
+  
+  # Tab panel container using Bootstrap styling
+  fluidRow(
+    column(12,
+           tabsetPanel(
+             id = "tabset",
+             tabPanel("Summary Statistics", summaryStatisticsUI("summary")),
+             tabPanel("Fund Split by Constituency", fundSplitUI("fundSplit")),
+             tabPanel("Fund Analysis", fundAnalysisUI("fundAnalysis")),
+             tabPanel("Unique Constituents", constituentsUI("constituents")),
+             tabPanel("Average Gift Size", avgGiftUI("avgGift")),
+             tabPanel("Top Donors", topDonorsUI("topDonors")),
+             tabPanel("Gift Size Distribution", giftDistUI("giftDist")),
+             tabPanel("Donor Levels", donorLevelsUI("donorLevels")),
+             tabPanel("Full Data", fullDataUI("fullData"))
+           )
     )
   )
 )
