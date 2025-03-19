@@ -120,6 +120,8 @@ server <- function(input, output, session) {
   
   # Initialize visualization modules (to be implemented later)
   # Example: donorAnalysisServer("donor_analysis", filtered_data_viz, fiscal_years_viz, summary_stats_viz)
+  # Initialize visualization modules
+  donorPyramidServer("donor_pyramid", filtered_data_viz, fiscal_years_viz, summary_stats_viz)
   
   # Synchronize filters between tabs (optional)
   # This helps maintain consistent filtering when switching between tabs

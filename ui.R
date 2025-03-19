@@ -79,7 +79,8 @@ ui <- fluidPage(
                tabPanel("Overview", 
                         h3("Visualization Overview"),
                         p("Select a visualization category from the tabs above.")
-               )
+               ),
+               tabPanel("Donor Pyramid", donorPyramidUI("donor_pyramid"))
                # Additional visualization tabs will go here
              )
     )
