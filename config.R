@@ -1,11 +1,5 @@
 # Configuration settings for the OODAE Gift Report application
 
-
-
-
-
-
-
 config <- list(
   
   # ========== Shiny Theme CONFIGURATION ==========
