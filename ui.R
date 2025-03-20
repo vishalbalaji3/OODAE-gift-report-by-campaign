@@ -33,9 +33,12 @@ ui <- fluidPage(
                  column(3, selectInput("dataTabFilter_giftType", "Select Gift Type:",
                                        choices = levels(FullData$`Gift Type`),
                                        multiple = TRUE)),
-                 column(3, selectInput("dataTabFilter_year", "Select Fiscal Years:",
-                                       choices = sort(unique(FullData$`Fiscal Year`)),
-                                       multiple = TRUE))
+                 column(3, radioButtons("dataTabFilter_timeframe", "Time Period:",
+                                        choices = c("Fiscal Year" = "fiscal", 
+                                                    "Calendar Year" = "calendar"),
+                                        selected = "fiscal",
+                                        inline = TRUE)),
+                 column(3, uiOutput("dataTabFilter_yearUI"))
                )
              ),
              
@@ -67,9 +70,12 @@ ui <- fluidPage(
                  column(3, selectInput("vizFilter_giftType", "Select Gift Type:",
                                        choices = levels(FullData$`Gift Type`),
                                        multiple = TRUE)),
-                 column(3, selectInput("vizFilter_year", "Select Fiscal Years:",
-                                       choices = sort(unique(FullData$`Fiscal Year`)),
-                                       multiple = TRUE))
+                 column(3, radioButtons("vizFilter_timeframe", "Time Period:",
+                                        choices = c("Fiscal Year" = "fiscal", 
+                                                    "Calendar Year" = "calendar"),
+                                        selected = "fiscal",
+                                        inline = TRUE)),
+                 column(3, uiOutput("vizFilter_yearUI"))
                )
              ),
              

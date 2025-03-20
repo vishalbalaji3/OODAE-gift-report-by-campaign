@@ -9,15 +9,7 @@ donorPyramidUI <- function(id) {
       column(12,
              div(class = "panel panel-default",
                  div(class = "panel-heading", 
-                     h4("Donor Pyramid"),
-                     # Fix alignment of time period selector
-                     div(style = "position: absolute; right: 15px; top: 5px;",
-                         radioButtons(ns("timeframe"), "Time Period:",
-                                      choices = c("Fiscal Year" = "fiscal", 
-                                                  "Calendar Year" = "calendar"),
-                                      selected = "fiscal",
-                                      inline = TRUE)
-                     )
+                     h4("Donor Pyramid")
                  ),
                  div(class = "panel-body",
                      # Summary metrics above the visualization
@@ -28,48 +20,31 @@ donorPyramidUI <- function(id) {
                  )
              )
       )
-    ),
-    
-    # Download options
-    fluidRow(
-      column(12,
-             div(class = "btn-group", style = "margin-top: 20px; margin-bottom: 30px;",
-                 downloadButton(ns("download_png"), "Download PNG", class = "btn-primary"),
-                 downloadButton(ns("download_csv"), "Download Data", class = "btn-primary")
-             )
-      )
     )
   )
 }
 
 # Server Function
-donorPyramidServer <- function(id, filtered_data, fiscal_years, summary_stats) {
+donorPyramidServer <- function(id, filtered_data, fiscal_years, summary_stats, time_period = reactive("fiscal")) {
   moduleServer(id, function(input, output, session) {
     
     # Process the data for the donor pyramid
     processed_data <- reactive({
+      req(filtered_data())
+      
       # Get the filtered data
       data <- filtered_data()
       
-      # If no data, return empty dataframe
+      # If no data, return empty dataframe with proper structure
       if(nrow(data) == 0) {
         return(data.frame(
           Donor_Level = character(),
           Donors = integer(),
           Amount = numeric(),
+          Donor_Percent = numeric(),
+          Amount_Percent = numeric(),
           stringsAsFactors = FALSE
         ))
-      }
-      
-      # Process dates based on selected time period
-      if(input$timeframe == "calendar") {
-        # For calendar year, create a new grouping column
-        data <- data %>%
-          mutate(Year_Group = format(as.Date(`Gift Date`), "%Y"))
-      } else {
-        # For fiscal year, use the existing column
-        data <- data %>%
-          mutate(Year_Group = `Fiscal Year`)
       }
       
       # Get range labels and thresholds from config
@@ -119,11 +94,24 @@ donorPyramidServer <- function(id, filtered_data, fiscal_years, summary_stats) {
         left_join(pyramid_data, by = "Donor_Level") %>%
         mutate(
           Donors = replace_na(Donors, 0),
-          Amount = replace_na(Amount, 0),
-          # Calculate percentages
-          Donor_Percent = if(sum(Donors) > 0) Donors / sum(Donors) * 100 else 0,
-          Amount_Percent = if(sum(Amount) > 0) Amount / sum(Amount) * 100 else 0
+          Amount = replace_na(Amount, 0)
         )
+      
+      # Calculate percentages only if there are donors
+      if(sum(pyramid_data$Donors) > 0) {
+        pyramid_data <- pyramid_data %>%
+          mutate(
+            Donor_Percent = Donors / sum(Donors) * 100,
+            Amount_Percent = if(sum(Amount) > 0) Amount / sum(Amount) * 100 else 0
+          )
+      } else {
+        # Add zero percentages if no donors
+        pyramid_data <- pyramid_data %>%
+          mutate(
+            Donor_Percent = 0,
+            Amount_Percent = 0
+          )
+      }
       
       return(pyramid_data)
     })
@@ -132,23 +120,29 @@ donorPyramidServer <- function(id, filtered_data, fiscal_years, summary_stats) {
     output$pyramidSummary <- renderUI({
       data <- processed_data()
       
-      if(nrow(data) == 0 || sum(data$Donors) == 0) {
+      if(nrow(data) == 0 || sum(data$Donors, na.rm = TRUE) == 0) {
         return(HTML("<p>No data available for the selected filters.</p>"))
       }
       
       # Create summary metrics
-      total_donors <- sum(data$Donors)
-      total_amount <- sum(data$Amount)
+      total_donors <- sum(data$Donors, na.rm = TRUE)
+      total_amount <- sum(data$Amount, na.rm = TRUE)
       
       # For average gift calculation, we need the original data
       # to count actual gifts rather than donors
-      gift_count <- nrow(filtered_data())
-      avg_gift_size <- if(gift_count > 0) sum(as.numeric(filtered_data()$`Fund Split Amount`), na.rm = TRUE) / gift_count else 0
+      filtered_data_value <- filtered_data()
+      gift_count <- nrow(filtered_data_value)
+      avg_gift_size <- if(gift_count > 0) sum(as.numeric(filtered_data_value$`Fund Split Amount`), na.rm = TRUE) / gift_count else 0
       
-      # Get the top 2 donor levels
-      top_levels <- head(levels(data$Donor_Level), 2)
-      top_tier_donors <- sum(data$Donors[data$Donor_Level %in% top_levels])
-      top_tier_percent <- if(total_donors > 0) top_tier_donors / total_donors * 100 else 0
+      # Get the top donor levels - with error handling
+      top_tier_donors <- 0
+      top_tier_percent <- 0
+      
+      if(length(levels(data$Donor_Level)) > 0 && total_donors > 0) {
+        top_levels <- head(levels(data$Donor_Level), min(2, length(levels(data$Donor_Level))))
+        top_tier_donors <- sum(data$Donors[data$Donor_Level %in% top_levels], na.rm = TRUE)
+        top_tier_percent <- (top_tier_donors / total_donors) * 100
+      }
       
       # Format metrics
       formatted_amount <- format_currency(total_amount)
@@ -177,8 +171,7 @@ donorPyramidServer <- function(id, filtered_data, fiscal_years, summary_stats) {
         '</div></div>',
         
         '<div class="col-md-3 col-sm-6">',
-        '<div class="panel panel-primary" data-toggle="tooltip" title="Percentage of donors in the top two giving levels (', 
-        paste(top_levels, collapse = ' and '), ')">',
+        '<div class="panel panel-primary" data-toggle="tooltip" title="Percentage of donors in the top giving levels">',
         '<div class="panel-heading text-center"><strong>Top Tier Donors</strong></div>',
         '<div class="panel-body text-center"><h3>', sprintf("%.1f%%", top_tier_percent), '</h3></div>',
         '</div></div>',
@@ -199,7 +192,7 @@ donorPyramidServer <- function(id, filtered_data, fiscal_years, summary_stats) {
     output$pyramidPlot <- renderPlotly({
       data <- processed_data()
       
-      if(nrow(data) == 0 || sum(data$Donors) == 0) {
+      if(nrow(data) == 0 || sum(data$Donors, na.rm = TRUE) == 0) {
         # Return an empty plot with a message
         return(plot_ly() %>% 
                  layout(title = "No data available for the selected filters"))
@@ -208,72 +201,62 @@ donorPyramidServer <- function(id, filtered_data, fiscal_years, summary_stats) {
       # Create color palette
       colors <- colorRampPalette(c("#08306b", "#4292c6", "#9ecae1"))(nrow(data))
       
-      # Time period label for title
-      time_label <- ifelse(input$timeframe == "fiscal", 
+      # Get the current time period
+      current_time_period <- time_period()
+      
+      # Get current years
+      years <- fiscal_years()
+      
+      # Time period label
+      time_label <- ifelse(current_time_period == "fiscal", 
                            "Fiscal Year", 
                            "Calendar Year")
       
-      # Create the pyramid plot (horizontal bar chart)
-      plot_ly(data, 
-              type = "bar",
-              x = ~Donors,
-              y = ~Donor_Level,
-              orientation = 'h',
-              marker = list(color = colors),
-              hoverinfo = "text",
-              hovertext = ~paste(
-                "Level:", Donor_Level,
-                "<br>Donors:", format(Donors, big.mark = ","),
-                "<br>Amount:", format_currency(Amount),
-                "<br>% of Donors:", sprintf("%.1f%%", Donor_Percent),
-                "<br>% of Amount:", sprintf("%.1f%%", Amount_Percent)
-              ),
-              name = "Donors"
-      ) %>%
+      # Create a dynamic title based on years
+      if (length(years) == 0) {
+        plot_title <- "Donor Pyramid"
+      } else if (length(years) == 1) {
+        plot_title <- paste("Donor Pyramid -", years[1], time_label)
+      } else if (all(diff(as.numeric(years)) == 1)) {
+        # Consecutive years
+        plot_title <- paste("Donor Pyramid -", 
+                            years[1], "to", tail(years, 1), 
+                            paste0(time_label, "s"))
+      } else {
+        # Non-consecutive years
+        plot_title <- paste("Donor Pyramid -", 
+                            paste(years, collapse = ", "), 
+                            paste0(time_label, "s"))
+      }
+      
+      # Create the funnel chart for pyramid visualization
+      plot_ly(data) %>%
+        add_trace(
+          type = "funnel",
+          y = ~Donor_Level,
+          x = ~Donors,
+          marker = list(color = colors),
+          textposition = "inside",
+          textinfo = "value",
+          hoverinfo = "text",
+          hovertext = ~paste(
+            "Level:", Donor_Level,
+            "<br>Donors:", format(Donors, big.mark = ","),
+            "<br>Amount:", format_currency(Amount),
+            "<br>% of Donors:", sprintf("%.1f%%", Donor_Percent),
+            "<br>% of Amount:", sprintf("%.1f%%", Amount_Percent)
+          )
+        ) %>%
         layout(
-          title = paste("Donor Pyramid -", time_label),
+          title = plot_title,
           yaxis = list(
             title = "",
             categoryorder = "array",
-            categoryarray = rev(levels(data$Donor_Level))
-          ),
-          xaxis = list(
-            title = "Number of Donors",
-            showgrid = TRUE
+            categoryarray = levels(data$Donor_Level)
           ),
           showlegend = FALSE,
-          margin = list(l = 50, r = 20, t = 50, b = 50)
+          margin = list(l = 130, r = 20, t = 50, b = 50)  # Increased left margin for labels
         )
     })
-    
-    # Download handlers
-    output$download_png <- downloadHandler(
-      filename = function() {
-        paste0("donor_pyramid_", Sys.Date(), ".png")
-      },
-      content = function(file) {
-        # Export to PNG using webshot package
-        htmlwidgets::saveWidget(plotly_build(output$pyramidPlot), 
-                                file = "temp.html",
-                                selfcontained = TRUE)
-        
-        if (requireNamespace("webshot", quietly = TRUE)) {
-          webshot::webshot("temp.html", file = file)
-          if (file.exists("temp.html")) file.remove("temp.html")
-        } else {
-          message("Please install the webshot package for PNG export")
-        }
-      }
-    )
-    
-    output$download_csv <- downloadHandler(
-      filename = function() {
-        paste0("donor_pyramid_data_", Sys.Date(), ".csv")
-      },
-      content = function(file) {
-        # Write data to CSV
-        write.csv(processed_data(), file, row.names = FALSE)
-      }
-    )
   })
 }

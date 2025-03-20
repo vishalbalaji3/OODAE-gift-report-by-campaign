@@ -24,6 +24,34 @@ process_date_by_timeframe <- function(data, timeframe = "fiscal") {
   }
 }
 
+# Determine which years to display based on time period selection
+get_filtered_years <- function(data, timeframe = "fiscal") {
+  if(timeframe == "calendar") {
+    # Get unique calendar years
+    unique(format(as.Date(data$`Gift Date`), "%Y"))
+  } else {
+    # Get unique fiscal years
+    unique(data$`Fiscal Year`)
+  }
+}
+
+# Helper function to filter data by selected years based on time period
+filter_by_time_period <- function(data, selected_years, timeframe = "fiscal") {
+  if(length(selected_years) == 0) {
+    return(data)  # If no years selected, return all data
+  }
+  
+  if(timeframe == "calendar") {
+    # Filter by calendar years
+    data %>% 
+      filter(format(as.Date(`Gift Date`), "%Y") %in% selected_years)
+  } else {
+    # Filter by fiscal years (default)
+    data %>% 
+      filter(`Fiscal Year` %in% selected_years)
+  }
+}
+
 # Common plotly theme to ensure consistent look across visualizations
 apply_viz_theme <- function(p) {
   p %>%

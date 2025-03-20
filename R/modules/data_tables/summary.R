@@ -24,7 +24,7 @@ summaryStatisticsUI <- function(id) {
 }
 
 # Server Function
-summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_stats) {
+summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_stats, time_period = reactive("fiscal")) {
   moduleServer(id, function(input, output, session) {
     
     # Process summary data
@@ -33,29 +33,30 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
       data <- filtered_data() %>%
         mutate(`Fund Split Amount` = as.numeric(`Fund Split Amount`))
       
-      # Then process the data
-      process_summary_data(data)
+      # Then process the data with time period
+      process_summary_data(data, time_period = time_period())
     })
     
     # Dynamic heading for the Gift Range Distribution Summary
     output$summaryHeading <- renderUI({
-      # Get selected fiscal years
-      fiscal_years <- sort(unique(filtered_data()$`Fiscal Year`))
+      # Get years based on time period
+      years <- fiscal_years()
+      time_label <- get_time_period_label(time_period())
       
-      if (length(fiscal_years) == 0) {
+      if (length(years) == 0) {
         heading <- "Gift Range Distribution Summary"
-      } else if (length(fiscal_years) == 1) {
-        heading <- paste("Gift Range Distribution Summary -", fiscal_years[1], "Fiscal Year")
-      } else if (all(diff(as.numeric(fiscal_years)) == 1)) {
+      } else if (length(years) == 1) {
+        heading <- paste("Gift Range Distribution Summary -", years[1], time_label)
+      } else if (all(diff(as.numeric(years)) == 1)) {
         # Consecutive years
         heading <- paste("Gift Range Distribution Summary -", 
-                         fiscal_years[1], "to", tail(fiscal_years, 1), 
-                         "Fiscal Years")
+                         years[1], "to", tail(years, 1), 
+                         paste0(time_label, "s"))
       } else {
         # Non-consecutive years
         heading <- paste("Gift Range Distribution Summary -", 
-                         paste(fiscal_years, collapse = ", "), 
-                         "Fiscal Years")
+                         paste(years, collapse = ", "), 
+                         paste0(time_label, "s"))
       }
       
       # Check if gift types are filtered
@@ -72,22 +73,22 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
     
     # Gift distribution summary
     output$giftDistSummary <- renderUI({
-      # Get selected fiscal years or most recent if none selected
-      fiscal_years <- sort(unique(filtered_data()$`Fiscal Year`))
+      # Get years based on time period
+      years <- fiscal_years()
       
-      if (length(fiscal_years) == 0) {
+      if (length(years) == 0) {
         return(HTML("<p>No data available for the selected filters.</p>"))
       }
       
       # Use the most recent year if no specific filters selected
-      most_recent_year <- tail(fiscal_years, 1)
+      most_recent_year <- tail(years, 1)
       
       # Make sure data has numeric Fund Split Amount
       gift_data <- filtered_data() %>%
         mutate(`Fund Split Amount` = as.numeric(`Fund Split Amount`))
       
       # Process the gift distribution data for the summary
-      dist_data <- process_gift_distribution_data(gift_data)
+      dist_data <- process_gift_distribution_data(gift_data, time_period = time_period())
       
       # Create a summary table HTML
       html_table <- '<table class="table table-striped table-bordered">'
@@ -97,8 +98,11 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
                            '<th class="text-right">Amount</th>',
                            '</tr></thead><tbody>')
       
+      # Determine prefix based on time period
+      prefix <- ifelse(time_period() == "calendar", "CY", "FY")
+      
       # If multiple years are selected, use Total columns
-      if (length(input$yearFilter) > 1 || length(fiscal_years) > 1) {
+      if (length(years) > 1) {
         # Add rows for each gift range using totals
         for(i in 1:nrow(dist_data)) {
           row <- dist_data[i, ]
@@ -120,12 +124,18 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
         total_amount <- sum(as.numeric(dist_data$Total_Amount), na.rm = TRUE)
       } else {
         # Use only the most recent year data
-        gift_count_col <- paste0("Number_of_Gifts_", most_recent_year)
-        amount_col <- paste0("Total_Amount_", most_recent_year)
+        gift_count_col <- paste0("Number_of_Gifts_", prefix, "_", most_recent_year)
+        amount_col <- paste0("Total_Amount_", prefix, "_", most_recent_year)
         
         # Check if columns exist before proceeding
         if(!(gift_count_col %in% names(dist_data) && amount_col %in% names(dist_data))) {
-          return(HTML("<p>No data available for the selected fiscal year.</p>"))
+          # Try without prefix for backward compatibility
+          gift_count_col <- paste0("Number_of_Gifts_", most_recent_year)
+          amount_col <- paste0("Total_Amount_", most_recent_year)
+          
+          if(!(gift_count_col %in% names(dist_data) && amount_col %in% names(dist_data))) {
+            return(HTML("<p>No data available for the selected year.</p>"))
+          }
         }
         
         # Add rows for each gift range
@@ -168,6 +178,37 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
       # Make sure all numeric columns are actually numeric
       data <- data %>%
         mutate(across(where(is.numeric), as.numeric))
+      
+      # Get appropriate title for year columns
+      time_label <- get_time_period_label(time_period())
+      
+      # Rename columns if they're fiscal years
+      if (time_period() == "fiscal") {
+        old_names <- names(data)
+        new_names <- old_names
+        
+        # For each column that's a year, add "FY" prefix
+        for (i in seq_along(old_names)) {
+          if (grepl("^\\d{4}$", old_names[i])) {
+            new_names[i] <- paste0("FY ", old_names[i])
+          }
+        }
+        
+        names(data) <- new_names
+      } else {
+        # For calendar years, add "CY" prefix
+        old_names <- names(data)
+        new_names <- old_names
+        
+        # For each column that's a year, add "CY" prefix
+        for (i in seq_along(old_names)) {
+          if (grepl("^\\d{4}$", old_names[i])) {
+            new_names[i] <- paste0("CY ", old_names[i])
+          }
+        }
+        
+        names(data) <- new_names
+      }
       
       currency_cols <- which(sapply(data, is.numeric)) - 1
       create_datatable(data, currency_cols)

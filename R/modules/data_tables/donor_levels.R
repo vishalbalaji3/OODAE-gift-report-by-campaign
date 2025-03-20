@@ -43,18 +43,18 @@ donorLevelsUI <- function(id) {
 }
 
 # Server Function
-donorLevelsServer <- function(id, filtered_data, fiscal_years, summary_stats) {
+donorLevelsServer <- function(id, filtered_data, fiscal_years, summary_stats, time_period = reactive("fiscal")) {
   moduleServer(id, function(input, output, session) {
     
     # Reactive expression for processed data
     processed_data <- reactive({
-      process_donor_levels_data(filtered_data())
+      process_donor_levels_data(filtered_data(), time_period = time_period())
     })
     
     # Donor Levels Summary
     output$donorLevelsSummary <- renderUI({
       # Get donor level data
-      donor_data <- process_donor_levels_summary(filtered_data())
+      donor_data <- process_donor_levels_summary(filtered_data(), time_period = time_period())
       
       if (nrow(donor_data) == 0) {
         return(HTML("<p>No data available for the selected filters.</p>"))
@@ -106,16 +106,19 @@ donorLevelsServer <- function(id, filtered_data, fiscal_years, summary_stats) {
                          options = list(dom = 't')))
       }
       
+      # Determine prefix based on time period
+      prefix <- ifelse(time_period() == "calendar", "CY", "FY")
+      
       # Extract only donor count columns
-      donor_cols <- c("Donor_Level", grep("^Donors_", names(data), value = TRUE), "Total_Donors")
+      donor_cols <- c("Donor_Level", grep(paste0("^Donors_", prefix), names(data), value = TRUE), "Total_Donors")
       display_data <- data[, donor_cols]
       
       # Rename columns for better readability
       col_names <- names(display_data)
       for (i in seq_along(col_names)) {
-        if (startsWith(col_names[i], "Donors_")) {
-          fiscal_year <- substr(col_names[i], 8, nchar(col_names[i]))
-          col_names[i] <- fiscal_year
+        if (startsWith(col_names[i], paste0("Donors_", prefix, "_"))) {
+          year <- substr(col_names[i], nchar(paste0("Donors_", prefix, "_")) + 1, nchar(col_names[i]))
+          col_names[i] <- paste0(prefix, " ", year)
         }
       }
       names(display_data) <- col_names
@@ -136,16 +139,19 @@ donorLevelsServer <- function(id, filtered_data, fiscal_years, summary_stats) {
                          options = list(dom = 't')))
       }
       
+      # Determine prefix based on time period
+      prefix <- ifelse(time_period() == "calendar", "CY", "FY")
+      
       # Extract only amount columns
-      amount_cols <- c("Donor_Level", grep("^Amount_", names(data), value = TRUE), "Total_Amount")
+      amount_cols <- c("Donor_Level", grep(paste0("^Amount_", prefix), names(data), value = TRUE), "Total_Amount")
       display_data <- data[, amount_cols]
       
       # Rename columns for better readability
       col_names <- names(display_data)
       for (i in seq_along(col_names)) {
-        if (startsWith(col_names[i], "Amount_")) {
-          fiscal_year <- substr(col_names[i], 8, nchar(col_names[i]))
-          col_names[i] <- fiscal_year
+        if (startsWith(col_names[i], paste0("Amount_", prefix, "_"))) {
+          year <- substr(col_names[i], nchar(paste0("Amount_", prefix, "_")) + 1, nchar(col_names[i]))
+          col_names[i] <- paste0(prefix, " ", year)
         }
       }
       names(display_data) <- col_names

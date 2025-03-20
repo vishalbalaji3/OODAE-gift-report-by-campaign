@@ -1,33 +1,43 @@
 # Data processing functions
 
-# Process summary data (Gift Type by Fiscal Year)
-process_summary_data <- function(filtered_data) {
+# Process summary data (Gift Type by Year)
+process_summary_data <- function(filtered_data, time_period = "fiscal") {
   filtered_data <- filtered_data %>%
     mutate(`Fund Split Amount` = as.numeric(`Fund Split Amount`))
   
-  process_data_by_group(filtered_data, group_cols = "Gift Type")
+  process_data_by_group(filtered_data, group_cols = "Gift Type", time_period = time_period)
 }
 
-# Process fund split data (Constituency Code by Fiscal Year)
-process_fund_split_data <- function(filtered_data) {
-  process_data_by_group(filtered_data, group_cols = "Primary Constituency Code")
+# Process fund split data (Constituency Code by Year)
+process_fund_split_data <- function(filtered_data, time_period = "fiscal") {
+  process_data_by_group(filtered_data, group_cols = "Primary Constituency Code", time_period = time_period)
 }
 
-# Process fund analysis data (Fund by Fiscal Year)
-process_fund_analysis_data <- function(filtered_data) {
-  process_data_by_group(filtered_data, group_cols = c("Fund ID", "Fund Description"))
+# Process fund analysis data (Fund by Year)
+process_fund_analysis_data <- function(filtered_data, time_period = "fiscal") {
+  process_data_by_group(filtered_data, group_cols = c("Fund ID", "Fund Description"), time_period = time_period)
 }
 
-# Process unique constituents data (Unique constituents by Constituency and Fiscal Year)
-process_unique_constituents_data <- function(filtered_data) {
-  fiscal_years <- sort(unique(filtered_data$`Fiscal Year`))
+# Process unique constituents data (Unique constituents by Constituency and Year)
+process_unique_constituents_data <- function(filtered_data, time_period = "fiscal") {
+  # Get years based on time period
+  if (time_period == "calendar") {
+    years <- sort(unique(format(as.Date(filtered_data$`Gift Date`), "%Y")))
+    year_col <- "Calendar_Year"
+    # Add a Calendar_Year column
+    filtered_data <- filtered_data %>%
+      mutate(Calendar_Year = format(as.Date(`Gift Date`), "%Y"))
+  } else {
+    years <- sort(unique(filtered_data$`Fiscal Year`))
+    year_col <- "Fiscal Year"
+  }
   
   # Get yearly counts
   yearly_data <- filtered_data %>%
-    group_by(`Primary Constituency Code`, `Fiscal Year`) %>%
+    group_by(`Primary Constituency Code`, !!sym(year_col)) %>%
     summarise(Unique_Constituents = n_distinct(`Constituent ID`, na.rm = TRUE),
               .groups = 'drop') %>%
-    pivot_wider(names_from = `Fiscal Year`,
+    pivot_wider(names_from = !!sym(year_col),
                 values_from = Unique_Constituents,
                 values_fill = 0)
   
@@ -40,25 +50,36 @@ process_unique_constituents_data <- function(filtered_data) {
   # Combine yearly data with total unique constituents
   yearly_data %>%
     left_join(total_unique, by = "Primary Constituency Code") %>%
-    select(`Primary Constituency Code`, all_of(fiscal_years), Total)
+    select(`Primary Constituency Code`, all_of(years), Total)
 }
 
 # Process top donors data
-process_top_donors_data <- function(filtered_data) {
+process_top_donors_data <- function(filtered_data, time_period = "fiscal") {
   process_data_by_group(filtered_data, 
-                        group_cols = c("Constituent ID", "Key Indicator", "Name"))
+                        group_cols = c("Constituent ID", "Key Indicator", "Name"),
+                        time_period = time_period)
 }
 
 # Process average gift size data
-process_avg_gift_data <- function(filtered_data) {
-  fiscal_years <- sort(unique(filtered_data$`Fiscal Year`))
+process_avg_gift_data <- function(filtered_data, time_period = "fiscal") {
+  # Get years based on time period
+  if (time_period == "calendar") {
+    years <- sort(unique(format(as.Date(filtered_data$`Gift Date`), "%Y")))
+    year_col <- "Calendar_Year"
+    # Add a Calendar_Year column
+    filtered_data <- filtered_data %>%
+      mutate(Calendar_Year = format(as.Date(`Gift Date`), "%Y"))
+  } else {
+    years <- sort(unique(filtered_data$`Fiscal Year`))
+    year_col <- "Fiscal Year"
+  }
   
-  # Calculate averages by fiscal year
+  # Calculate averages by year
   yearly_avgs <- filtered_data %>%
-    group_by(`Gift Type`, `Fiscal Year`) %>%
+    group_by(`Gift Type`, !!sym(year_col)) %>%
     summarise(Avg_Gift_Size = sum(`Fund Split Amount`, na.rm = TRUE) / n(),
               .groups = 'drop') %>%
-    pivot_wider(names_from = `Fiscal Year`, 
+    pivot_wider(names_from = !!sym(year_col), 
                 values_from = Avg_Gift_Size,
                 values_fill = 0)
   
@@ -71,12 +92,22 @@ process_avg_gift_data <- function(filtered_data) {
   # Combine yearly averages with overall average
   yearly_avgs %>%
     left_join(`Overall Avg`, by = "Gift Type") %>%
-    select(`Gift Type`, all_of(fiscal_years), `Overall Avg`)
+    select(`Gift Type`, all_of(years), `Overall Avg`)
 }
 
 # Process gift distribution data
-process_gift_distribution_data <- function(filtered_data) {
-  fiscal_years <- sort(unique(filtered_data$`Fiscal Year`))
+process_gift_distribution_data <- function(filtered_data, time_period = "fiscal") {
+  # Get years based on time period
+  if (time_period == "calendar") {
+    years <- sort(unique(format(as.Date(filtered_data$`Gift Date`), "%Y")))
+    year_col <- "Calendar_Year"
+    # Add a Calendar_Year column
+    filtered_data <- filtered_data %>%
+      mutate(Calendar_Year = format(as.Date(`Gift Date`), "%Y"))
+  } else {
+    years <- sort(unique(filtered_data$`Fiscal Year`))
+    year_col <- "Fiscal Year"
+  }
   
   # Get range labels and thresholds from config
   range_labels <- config$distribution_ranges$labels
@@ -99,18 +130,18 @@ process_gift_distribution_data <- function(filtered_data) {
       # Convert to factor to maintain order
       Gift_Range = factor(Gift_Range, levels = range_labels)
     ) %>%
-    group_by(Gift_Range, `Fiscal Year`) %>%
+    group_by(Gift_Range, !!sym(year_col)) %>%
     summarise(
       Number_of_Gifts = n(),
       Total_Amount = sum(`Fund Split Amount`, na.rm = TRUE),
       .groups = 'drop'
     ) %>%
     pivot_wider(
-      names_from = `Fiscal Year`,
+      names_from = !!sym(year_col),
       values_from = c(Number_of_Gifts, Total_Amount),
       values_fill = 0
     ) %>%
-    # Calculate totals across all fiscal years
+    # Calculate totals across all years
     mutate(
       Total_Gifts = rowSums(select(., starts_with("Number_of_Gifts_")), na.rm = TRUE),
       Total_Amount = rowSums(select(., starts_with("Total_Amount_")), na.rm = TRUE)
@@ -126,7 +157,7 @@ process_gift_distribution_data <- function(filtered_data) {
 }
 
 # Process donor levels summary
-process_donor_levels_summary <- function(filtered_data) {
+process_donor_levels_summary <- function(filtered_data, time_period = "fiscal") {
   # Get range labels and thresholds from config
   range_labels <- config$distribution_ranges$labels
   range_thresholds <- config$distribution_ranges$thresholds
@@ -141,7 +172,7 @@ process_donor_levels_summary <- function(filtered_data) {
     return(tail(range_labels, 1)) # Return the last label as default
   }
   
-  # Calculate total giving per donor across all selected fiscal years
+  # Calculate total giving per donor across all selected years
   aggregate_donor_data <- filtered_data %>%
     group_by(`Constituent ID`, `Name`) %>%
     summarise(
@@ -167,9 +198,27 @@ process_donor_levels_summary <- function(filtered_data) {
   donor_counts
 }
 
-# Process donor levels data by fiscal year
-process_donor_levels_data <- function(filtered_data) {
-  fiscal_years <- sort(unique(filtered_data$`Fiscal Year`))
+# Process donor levels data by year
+process_donor_levels_data <- function(filtered_data, time_period = "fiscal") {
+  # Get years based on time period
+  if (time_period == "calendar") {
+    years <- sort(unique(format(as.Date(filtered_data$`Gift Date`), "%Y")))
+    year_col <- "Calendar_Year"
+    # Add a Calendar_Year column
+    filtered_data <- filtered_data %>%
+      mutate(Calendar_Year = format(as.Date(`Gift Date`), "%Y"))
+  } else {
+    years <- sort(unique(filtered_data$`Fiscal Year`))
+    year_col <- "Fiscal Year"
+  }
+  
+  # Process data by year
+  year_data <- filtered_data %>%
+    group_by(`Constituent ID`, !!sym(year_col)) %>%
+    summarise(
+      Year_Amount = sum(`Fund Split Amount`, na.rm = TRUE),
+      .groups = 'drop'
+    )
   
   # Get range labels and thresholds from config
   range_labels <- config$distribution_ranges$labels
@@ -185,16 +234,8 @@ process_donor_levels_data <- function(filtered_data) {
     return(tail(range_labels, 1)) # Return the last label as default
   }
   
-  # Process data by fiscal year
-  fiscal_year_data <- filtered_data %>%
-    group_by(`Constituent ID`, `Fiscal Year`) %>%
-    summarise(
-      Year_Amount = sum(`Fund Split Amount`, na.rm = TRUE),
-      .groups = 'drop'
-    )
-  
-  # Calculate total giving per donor across all selected fiscal years
-  total_giving <- fiscal_year_data %>%
+  # Calculate total giving per donor across all selected years
+  total_giving <- year_data %>%
     group_by(`Constituent ID`) %>%
     summarise(
       Total_Giving = sum(Year_Amount, na.rm = TRUE),
@@ -207,145 +248,39 @@ process_donor_levels_data <- function(filtered_data) {
     )
   
   # Join the donor levels back to the fiscal year data
-  donor_by_year <- fiscal_year_data %>%
+  donor_by_year <- year_data %>%
     left_join(total_giving %>% select(`Constituent ID`, Donor_Level), by = "Constituent ID")
   
-  # Count donors and sum amounts by level and fiscal year
+  # Count donors and sum amounts by level and year
   donor_counts_by_year <- donor_by_year %>%
-    group_by(Donor_Level, `Fiscal Year`) %>%
+    group_by(Donor_Level, !!sym(year_col)) %>%
     summarise(
       Donors = n_distinct(`Constituent ID`),
       Amount = sum(Year_Amount, na.rm = TRUE),
       .groups = 'drop'
     )
   
-  # Pivot to get fiscal years as columns for donors
+  # Create prefix based on time period
+  prefix <- ifelse(time_period == "calendar", "CY", "FY")
+  
+  # Pivot to get years as columns for donors
   donor_counts_pivot <- donor_counts_by_year %>%
-    select(Donor_Level, `Fiscal Year`, Donors) %>%
+    select(Donor_Level, !!sym(year_col), Donors) %>%
     pivot_wider(
-      names_from = `Fiscal Year`,
+      names_from = !!sym(year_col),
       values_from = Donors,
       values_fill = 0,
-      names_prefix = "Donors_"
+      names_prefix = paste0("Donors_", prefix, "_")
     )
   
-  # Pivot to get fiscal years as columns for amounts
+  # Pivot to get years as columns for amounts
   amount_pivot <- donor_counts_by_year %>%
-    select(Donor_Level, `Fiscal Year`, Amount) %>%
+    select(Donor_Level, !!sym(year_col), Amount) %>%
     pivot_wider(
-      names_from = `Fiscal Year`,
+      names_from = !!sym(year_col),
       values_from = Amount,
       values_fill = 0,
-      names_prefix = "Amount_"
-    )
-  
-  # Calculate overall totals by donor level
-  overall_totals <- total_giving %>%
-    group_by(Donor_Level) %>%
-    summarise(
-      Total_Donors = n_distinct(`Constituent ID`),
-      Total_Amount = sum(Total_Giving, na.rm = TRUE),
-      .groups = 'drop'
-    )
-  
-  # Join everything together
-  result <- donor_counts_pivot %>%
-    left_join(amount_pivot, by = "Donor_Level") %>%
-    left_join(overall_totals, by = "Donor_Level")
-  
-  # Return the results (ensure all donor levels are included even if they have no donors)
-  levels_template <- data.frame(
-    Donor_Level = factor(levels(total_giving$Donor_Level), 
-                         levels = levels(total_giving$Donor_Level))
-  )
-  
-  result <- levels_template %>%
-    left_join(result, by = "Donor_Level") %>%
-    mutate(across(where(is.numeric), ~replace_na(., 0)))
-  
-  return(result)
-}
-
-# Process donor levels data by fiscal year
-process_donor_levels_data <- function(filtered_data) {
-  fiscal_years <- sort(unique(filtered_data$`Fiscal Year`))
-  
-  # Process data by fiscal year
-  fiscal_year_data <- filtered_data %>%
-    group_by(`Constituent ID`, `Fiscal Year`) %>%
-    summarise(
-      Year_Amount = sum(`Fund Split Amount`, na.rm = TRUE),
-      .groups = 'drop'
-    )
-  
-  # Calculate total giving per donor across all selected fiscal years
-  total_giving <- fiscal_year_data %>%
-    group_by(`Constituent ID`) %>%
-    summarise(
-      Total_Giving = sum(Year_Amount, na.rm = TRUE),
-      .groups = 'drop'
-    ) %>%
-    # Categorize donors by giving level
-    mutate(
-      Donor_Level = case_when(
-        Total_Giving >= 150000 ~ "$150,000+",
-        Total_Giving >= 75000 ~ "$75,000 - $149,999",
-        Total_Giving >= 40000 ~ "$40,000 - $74,999",
-        Total_Giving >= 20000 ~ "$20,000 - $39,999",
-        Total_Giving >= 10000 ~ "$10,000 - $19,999",
-        Total_Giving >= 5000 ~ "$5,000 - $9,999",
-        Total_Giving >= 2500 ~ "$2,500 - $4,999",
-        Total_Giving >= 1000 ~ "$1,000 - $2,499",
-        Total_Giving >= 500 ~ "$500 - $999",
-        Total_Giving >= 100 ~ "$100 - $499",
-        TRUE ~ "Under $100"
-      ),
-      Donor_Level = factor(Donor_Level, levels = c(
-        "$150,000+",
-        "$75,000 - $149,999", 
-        "$40,000 - $74,999",
-        "$20,000 - $39,999",
-        "$10,000 - $19,999",
-        "$5,000 - $9,999",
-        "$2,500 - $4,999",
-        "$1,000 - $2,499",
-        "$500 - $999",
-        "$100 - $499",
-        "Under $100"
-      ))
-    )
-  
-  # Join the donor levels back to the fiscal year data
-  donor_by_year <- fiscal_year_data %>%
-    left_join(total_giving %>% select(`Constituent ID`, Donor_Level), by = "Constituent ID")
-  
-  # Count donors and sum amounts by level and fiscal year
-  donor_counts_by_year <- donor_by_year %>%
-    group_by(Donor_Level, `Fiscal Year`) %>%
-    summarise(
-      Donors = n_distinct(`Constituent ID`),
-      Amount = sum(Year_Amount, na.rm = TRUE),
-      .groups = 'drop'
-    )
-  
-  # Pivot to get fiscal years as columns for donors
-  donor_counts_pivot <- donor_counts_by_year %>%
-    select(Donor_Level, `Fiscal Year`, Donors) %>%
-    pivot_wider(
-      names_from = `Fiscal Year`,
-      values_from = Donors,
-      values_fill = 0,
-      names_prefix = "Donors_"
-    )
-  
-  # Pivot to get fiscal years as columns for amounts
-  amount_pivot <- donor_counts_by_year %>%
-    select(Donor_Level, `Fiscal Year`, Amount) %>%
-    pivot_wider(
-      names_from = `Fiscal Year`,
-      values_from = Amount,
-      values_fill = 0,
-      names_prefix = "Amount_"
+      names_prefix = paste0("Amount_", prefix, "_")
     )
   
   # Calculate overall totals by donor level

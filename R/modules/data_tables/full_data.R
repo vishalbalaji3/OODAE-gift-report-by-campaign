@@ -24,7 +24,7 @@ fullDataUI <- function(id) {
 }
 
 # Server Function
-fullDataServer <- function(id, filtered_data, fiscal_years, summary_stats) {
+fullDataServer <- function(id, filtered_data, fiscal_years, summary_stats, time_period = reactive("fiscal")) {
   moduleServer(id, function(input, output, session) {
     
     # Use the filtered data directly
@@ -42,8 +42,10 @@ fullDataServer <- function(id, filtered_data, fiscal_years, summary_stats) {
       # Use shared summary_stats reactive
       stats <- summary_stats()
       
-      # Get fiscal year range
+      # Get year range
       years <- fiscal_years()
+      time_label <- get_time_period_label(time_period())
+      
       year_range <- ifelse(length(years) > 1, 
                            paste(years[1], "to", tail(years, 1)),
                            years[1])
@@ -56,7 +58,7 @@ fullDataServer <- function(id, filtered_data, fiscal_years, summary_stats) {
                            '</tr></thead><tbody>')
       
       # Add summary rows
-      html_table <- paste0(html_table, '<tr><td>Fiscal Year(s)</td><td class="text-right">', year_range, '</td></tr>')
+      html_table <- paste0(html_table, '<tr><td>', time_label, '(s)</td><td class="text-right">', year_range, '</td></tr>')
       html_table <- paste0(html_table, '<tr><td>Total Number of Gifts</td><td class="text-right">', format(stats$total_gifts, big.mark = ","), '</td></tr>')
       html_table <- paste0(html_table, '<tr><td>Total Gift Amount</td><td class="text-right">', format_currency(stats$total_amount), '</td></tr>')
       html_table <- paste0(html_table, '<tr><td>Unique Constituents</td><td class="text-right">', format(stats$total_constituents, big.mark = ","), '</td></tr>')
@@ -70,6 +72,13 @@ fullDataServer <- function(id, filtered_data, fiscal_years, summary_stats) {
     # Render data table
     output$fullDataTable <- renderDT({
       data <- filtered_data() %>% arrange(`Fiscal Year`)
+      
+      # If we're in calendar year mode, add a Calendar Year column
+      if(time_period() == "calendar") {
+        data <- data %>%
+          mutate(`Calendar Year` = format(as.Date(`Gift Date`), "%Y"))
+      }
+      
       currency_cols <- which(names(data) %in% c("Fund Split Amount", "Gift Amount", 
                                                 "Gift Receipt Amount", "Gift Pledge Balance")) - 1
       create_datatable(data, currency_cols)

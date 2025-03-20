@@ -2,25 +2,35 @@
 
 # Common function to process data by group (handles multiple processing patterns)
 process_data_by_group <- function(filtered_data, group_cols, value_col = "Fund Split Amount", 
-                                  include_total = TRUE, sort_by_total = TRUE) {
-  # Get fiscal years once
-  fiscal_years <- sort(unique(filtered_data$`Fiscal Year`))
+                                  include_total = TRUE, sort_by_total = TRUE, 
+                                  time_period = "fiscal") {
+  # Get fiscal or calendar years based on time period setting
+  if (time_period == "calendar") {
+    years <- sort(unique(format(as.Date(filtered_data$`Gift Date`), "%Y")))
+    year_col <- "Calendar_Year"
+    # Add a Calendar_Year column
+    filtered_data <- filtered_data %>%
+      mutate(Calendar_Year = format(as.Date(`Gift Date`), "%Y"))
+  } else {
+    years <- sort(unique(filtered_data$`Fiscal Year`))
+    year_col <- "Fiscal Year"
+  }
   
   # Build the grouping expression dynamically
-  group_vars <- c(group_cols, "Fiscal Year")
+  group_vars <- c(group_cols, year_col)
   
   # Do the grouping, summarizing, and pivoting in one pipeline
   result <- filtered_data %>%
     group_by(across(all_of(group_vars))) %>%
     summarise(Total_Value = sum(!!sym(value_col), na.rm = TRUE),
               .groups = 'drop') %>%
-    pivot_wider(names_from = "Fiscal Year",
+    pivot_wider(names_from = year_col,
                 values_from = "Total_Value",
                 values_fill = 0)
   
   # Add total column if requested
   if(include_total) {
-    year_cols <- intersect(names(result), fiscal_years)
+    year_cols <- intersect(names(result), years)
     result <- result %>%
       mutate(Total = rowSums(select(., all_of(year_cols)), na.rm = TRUE))
   }
@@ -32,9 +42,9 @@ process_data_by_group <- function(filtered_data, group_cols, value_col = "Fund S
   
   # Return the final result with columns in proper order
   if(include_total) {
-    result <- result %>% select(all_of(group_cols), all_of(fiscal_years), Total)
+    result <- result %>% select(all_of(group_cols), all_of(years), Total)
   } else {
-    result <- result %>% select(all_of(group_cols), all_of(fiscal_years))
+    result <- result %>% select(all_of(group_cols), all_of(years))
   }
   
   return(result)
@@ -110,4 +120,19 @@ create_summary_table <- function(data, id_col, value_col, percent_col = NULL,
   html_table <- paste0(html_table, '</tbody></table>')
   
   return(HTML(html_table))
+}
+
+# Helper to get the appropriate years based on time period
+get_years_by_time_period <- function(data, time_period = "fiscal") {
+  if (time_period == "calendar") {
+    years <- sort(unique(format(as.Date(data$`Gift Date`), "%Y")))
+  } else {
+    years <- sort(unique(data$`Fiscal Year`))
+  }
+  return(years)
+}
+
+# Helper to get time period label for display
+get_time_period_label <- function(time_period = "fiscal") {
+  ifelse(time_period == "fiscal", "Fiscal Year", "Calendar Year")
 }

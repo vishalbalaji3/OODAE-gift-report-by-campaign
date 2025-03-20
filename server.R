@@ -17,6 +17,54 @@ server <- function(input, output, session) {
           "| Dashboard refreshed:", format(app_start_time, config$date_format$display))
   })
   
+  # Generate available years for data tables based on selected time period
+  available_years_tables <- reactive({
+    if(input$dataTabFilter_timeframe == "calendar") {
+      sort(unique(format(as.Date(FullData$`Gift Date`), "%Y")))
+    } else {
+      sort(unique(FullData$`Fiscal Year`))
+    }
+  })
+  
+  # Dynamic UI for year selection in data tables section with proper capitalization
+  output$dataTabFilter_yearUI <- renderUI({
+    # Create a properly capitalized label based on time period
+    if(input$dataTabFilter_timeframe == "calendar") {
+      label <- "Calendar Year:"
+    } else {
+      label <- "Fiscal Year:" 
+    }
+    
+    selectInput("dataTabFilter_year", 
+                label = label,
+                choices = available_years_tables(),
+                multiple = TRUE)
+  })
+  
+  # Generate available years for visualizations based on selected time period
+  available_years_viz <- reactive({
+    if(input$vizFilter_timeframe == "calendar") {
+      sort(unique(format(as.Date(FullData$`Gift Date`), "%Y")))
+    } else {
+      sort(unique(FullData$`Fiscal Year`))
+    }
+  })
+  
+  # Dynamic UI for year selection in visualizations section with proper capitalization
+  output$vizFilter_yearUI <- renderUI({
+    # Create a properly capitalized label based on time period
+    if(input$vizFilter_timeframe == "calendar") {
+      label <- "Calendar Year:"
+    } else {
+      label <- "Fiscal Year:"
+    }
+    
+    selectInput("vizFilter_year", 
+                label = label,
+                choices = available_years_viz(),
+                multiple = TRUE)
+  })
+  
   # FILTERED DATA FOR DATA TABLES SECTION
   filtered_data_tables <- reactive({
     data <- FullData
@@ -29,16 +77,30 @@ server <- function(input, output, session) {
       data <- data %>% filter(`Gift Type` %in% input$dataTabFilter_giftType)
     }
     
+    # Filter by years based on selected time period
     if (length(input$dataTabFilter_year) > 0) {
-      data <- data %>% filter(`Fiscal Year` %in% input$dataTabFilter_year)
+      if(input$dataTabFilter_timeframe == "calendar") {
+        # Filter by calendar years
+        data <- data %>% 
+          filter(format(as.Date(`Gift Date`), "%Y") %in% input$dataTabFilter_year)
+      } else {
+        # Filter by fiscal years (default)
+        data <- data %>% 
+          filter(`Fiscal Year` %in% input$dataTabFilter_year)
+      }
     }
     
     data
   })
   
-  # Fiscal years calculation for data tables
+  # Fiscal years calculation for data tables - respects time period selection
   fiscal_years_tables <- reactive({
-    sort(unique(filtered_data_tables()$`Fiscal Year`))
+    # This reactive should return the appropriate years based on time period
+    if(input$dataTabFilter_timeframe == "calendar") {
+      sort(unique(format(as.Date(filtered_data_tables()$`Gift Date`), "%Y")))
+    } else {
+      sort(unique(filtered_data_tables()$`Fiscal Year`))
+    }
   })
   
   # Summary statistics for data tables
@@ -74,16 +136,30 @@ server <- function(input, output, session) {
       data <- data %>% filter(`Gift Type` %in% input$vizFilter_giftType)
     }
     
+    # Filter by years based on selected time period
     if (length(input$vizFilter_year) > 0) {
-      data <- data %>% filter(`Fiscal Year` %in% input$vizFilter_year)
+      if(input$vizFilter_timeframe == "calendar") {
+        # Filter by calendar years
+        data <- data %>% 
+          filter(format(as.Date(`Gift Date`), "%Y") %in% input$vizFilter_year)
+      } else {
+        # Filter by fiscal years (default)
+        data <- data %>% 
+          filter(`Fiscal Year` %in% input$vizFilter_year)
+      }
     }
     
     data
   })
   
-  # Fiscal years calculation for visualizations
+  # Fiscal years calculation for visualizations - respects time period selection
   fiscal_years_viz <- reactive({
-    sort(unique(filtered_data_viz()$`Fiscal Year`))
+    # This reactive should return the appropriate years based on time period
+    if(input$vizFilter_timeframe == "calendar") {
+      sort(unique(format(as.Date(filtered_data_viz()$`Gift Date`), "%Y")))
+    } else {
+      sort(unique(filtered_data_viz()$`Fiscal Year`))
+    }
   })
   
   # Summary statistics for visualizations
@@ -107,21 +183,29 @@ server <- function(input, output, session) {
     )
   })
   
-  # Initialize data table modules with their reactive values
-  summaryStatisticsServer("summary", filtered_data_tables, fiscal_years_tables, summary_stats_tables)
-  fundSplitServer("fundSplit", filtered_data_tables, fiscal_years_tables, summary_stats_tables)
-  fundAnalysisServer("fundAnalysis", filtered_data_tables, fiscal_years_tables, summary_stats_tables)
-  constituentsServer("constituents", filtered_data_tables, fiscal_years_tables, summary_stats_tables)
-  avgGiftServer("avgGift", filtered_data_tables, fiscal_years_tables, summary_stats_tables)
-  topDonorsServer("topDonors", filtered_data_tables, fiscal_years_tables, summary_stats_tables)
-  giftDistServer("giftDist", filtered_data_tables, fiscal_years_tables, summary_stats_tables)
-  donorLevelsServer("donorLevels", filtered_data_tables, fiscal_years_tables, summary_stats_tables)
-  fullDataServer("fullData", filtered_data_tables, fiscal_years_tables, summary_stats_tables)
+  # Add time period setting to be passed to modules
+  time_period_tables <- reactive({
+    input$dataTabFilter_timeframe
+  })
   
-  # Initialize visualization modules (to be implemented later)
-  # Example: donorAnalysisServer("donor_analysis", filtered_data_viz, fiscal_years_viz, summary_stats_viz)
+  time_period_viz <- reactive({
+    input$vizFilter_timeframe
+  })
+  
+  # Initialize data table modules with their reactive values and time period
+  summaryStatisticsServer("summary", filtered_data_tables, fiscal_years_tables, summary_stats_tables, reactive({input$dataTabFilter_timeframe}))
+  fundSplitServer("fundSplit", filtered_data_tables, fiscal_years_tables, summary_stats_tables, reactive({input$dataTabFilter_timeframe}))
+  fundAnalysisServer("fundAnalysis", filtered_data_tables, fiscal_years_tables, summary_stats_tables, reactive({input$dataTabFilter_timeframe}))
+  constituentsServer("constituents", filtered_data_tables, fiscal_years_tables, summary_stats_tables, reactive({input$dataTabFilter_timeframe}))
+  avgGiftServer("avgGift", filtered_data_tables, fiscal_years_tables, summary_stats_tables, reactive({input$dataTabFilter_timeframe}))
+  topDonorsServer("topDonors", filtered_data_tables, fiscal_years_tables, summary_stats_tables, reactive({input$dataTabFilter_timeframe}))
+  giftDistServer("giftDist", filtered_data_tables, fiscal_years_tables, summary_stats_tables, reactive({input$dataTabFilter_timeframe}))
+  donorLevelsServer("donorLevels", filtered_data_tables, fiscal_years_tables, summary_stats_tables, reactive({input$dataTabFilter_timeframe}))
+  fullDataServer("fullData", filtered_data_tables, fiscal_years_tables, summary_stats_tables, reactive({input$dataTabFilter_timeframe}))
+  
+  
   # Initialize visualization modules
-  donorPyramidServer("donor_pyramid", filtered_data_viz, fiscal_years_viz, summary_stats_viz)
+  donorPyramidServer("donor_pyramid", filtered_data_viz, fiscal_years_viz, summary_stats_viz, reactive({input$vizFilter_timeframe}))
   
   # Synchronize filters between tabs (optional)
   # This helps maintain consistent filtering when switching between tabs
@@ -134,9 +218,8 @@ server <- function(input, output, session) {
       if (length(input$vizFilter_giftType) > 0) {
         updateSelectInput(session, "dataTabFilter_giftType", selected = input$vizFilter_giftType)
       }
-      if (length(input$vizFilter_year) > 0) {
-        updateSelectInput(session, "dataTabFilter_year", selected = input$vizFilter_year)
-      }
+      updateRadioButtons(session, "dataTabFilter_timeframe", selected = input$vizFilter_timeframe)
+      # Year filter will update automatically via the reactive UI
     } else if (input$mainNav == "Visualizations") {
       # When switching to Visualizations, update its filters based on Data Tables filters
       if (!is.null(input$dataTabFilter_campaign)) {
@@ -145,9 +228,8 @@ server <- function(input, output, session) {
       if (length(input$dataTabFilter_giftType) > 0) {
         updateSelectInput(session, "vizFilter_giftType", selected = input$dataTabFilter_giftType)
       }
-      if (length(input$dataTabFilter_year) > 0) {
-        updateSelectInput(session, "vizFilter_year", selected = input$dataTabFilter_year)
-      }
+      updateRadioButtons(session, "vizFilter_timeframe", selected = input$dataTabFilter_timeframe)
+      # Year filter will update automatically via the reactive UI
     }
   })
 }

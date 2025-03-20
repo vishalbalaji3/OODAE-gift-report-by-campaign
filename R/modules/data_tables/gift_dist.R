@@ -34,17 +34,20 @@ giftDistUI <- function(id) {
 }
 
 # Server Function
-giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats) {
+giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats, time_period = reactive("fiscal")) {
   moduleServer(id, function(input, output, session) {
     
     # Reactive expression for processed data
     processed_data <- reactive({
-      process_gift_distribution_data(filtered_data())
+      process_gift_distribution_data(filtered_data(), time_period = time_period())
     })
     
     # Gift Count Table renderer
     output$giftCountTable <- renderDT({
       data <- processed_data()
+      
+      # Determine prefix based on time period
+      prefix <- ifelse(time_period() == "calendar", "CY", "FY")
       
       # Get column names for gift counts
       gift_count_cols <- grep("^Number_of_Gifts_", names(data), value = TRUE)
@@ -56,10 +59,24 @@ giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats) {
       # Rename columns to remove prefixes and use cleaner names
       new_names <- names(display_data)
       
-      # Clean up gift count column names
+      # Clean up gift count column names and add appropriate prefix
       for (col in gift_count_cols) {
-        year <- gsub("Number_of_Gifts_", "", col)
-        new_col_name <- year
+        # Extract the year part
+        year_match <- regexpr("_\\d{4}$", col)
+        if (year_match > 0) {
+          year <- substring(col, year_match + 1)
+          new_col_name <- paste0(prefix, " ", year)
+        } else {
+          # Extract any identifier after the last underscore
+          id_match <- regexpr("_[^_]*$", col)
+          if (id_match > 0) {
+            id <- substring(col, id_match + 1)
+            new_col_name <- paste0(prefix, " ", id)
+          } else {
+            # Default fallback
+            new_col_name <- col
+          }
+        }
         new_names[which(names(display_data) == col)] <- new_col_name
       }
       
@@ -96,6 +113,9 @@ giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats) {
     output$giftAmountTable <- renderDT({
       data <- processed_data()
       
+      # Determine prefix based on time period
+      prefix <- ifelse(time_period() == "calendar", "CY", "FY")
+      
       # Get column names for amounts
       amount_cols <- grep("^Total_Amount_", names(data), value = TRUE)
       
@@ -111,10 +131,24 @@ giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats) {
       # Rename columns to remove prefixes and use cleaner names
       new_names <- names(display_data)
       
-      # Clean up amount column names
+      # Clean up amount column names and add appropriate prefix
       for (col in amount_cols) {
-        year <- gsub("Total_Amount_", "", col)
-        new_col_name <- year
+        # Extract the year part
+        year_match <- regexpr("_\\d{4}$", col)
+        if (year_match > 0) {
+          year <- substring(col, year_match + 1)
+          new_col_name <- paste0(prefix, " ", year)
+        } else {
+          # Extract any identifier after the last underscore
+          id_match <- regexpr("_[^_]*$", col)
+          if (id_match > 0) {
+            id <- substring(col, id_match + 1)
+            new_col_name <- paste0(prefix, " ", id)
+          } else {
+            # Default fallback
+            new_col_name <- col
+          }
+        }
         new_names[which(names(display_data) == col)] <- new_col_name
       }
       
