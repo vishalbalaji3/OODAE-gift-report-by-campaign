@@ -1,10 +1,4 @@
-library(tidyverse)
-library(readr)
-library(writexl)
-library(flexdashboard)
-library(DT)
-library(shiny)
-library(dplyr)
+library(forcats)    # Needed for fct_recode
 
 # Source the config file to get configuration values
 source("config.R")
@@ -43,9 +37,9 @@ FullData <- read_csv("data/AllGifts.CSV",
     `Fiscal Year` = as.Date(                        # Convert to Date
       paste0(                                     # Create year string
         ifelse(
-          month(`Gift Date`) >= 7,
-          year(`Gift Date`) + 1,
-          year(`Gift Date`)
+          as.numeric(format(as.Date(`Gift Date`), "%m")) >= 7,
+          as.numeric(format(as.Date(`Gift Date`), "%Y")) + 1,
+          as.numeric(format(as.Date(`Gift Date`), "%Y"))
         ),
         "-01-01"                               # Add month and day for date conversion
       )

@@ -1,17 +1,17 @@
-# Load required libraries
+# Core packages
 library(shiny)
-library(DT)
-library(dplyr)
-library(tidyr)
 library(shinythemes)
 library(shinycssloaders)
-library(writexl)
-library(scales)
 
-library(plotly)       # For interactive plots
-library(lubridate)    # For date handling
-library(htmlwidgets)  # For saving widgets
-library(webshot2)     # For saving widgets as images
+# Data manipulation
+library(dplyr)
+library(tidyr)
+library(readr)
+
+# Output and visualization
+library(DT)
+library(writexl)
+library(plotly)     # Consider loading locally in visualization modules
 
 # Source configuration file first
 source("config.R")
