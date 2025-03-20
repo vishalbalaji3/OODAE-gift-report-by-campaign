@@ -53,17 +53,85 @@ format_currency <- function(x) {
   }
 }
 
-# Create standardized data tables
-create_datatable <- function(data, currency_cols = NULL) {
-  display_data <- data
+# Format numeric values with abbreviations and separators
+format_number <- function(x) {
+  # Get numeric formatting settings from config
+  numeric_config <- config$format$numeric
   
-  if (!is.null(currency_cols)) {
-    display_data <- as.data.frame(lapply(seq_along(display_data), function(i) {
-      if ((i-1) %in% currency_cols) format_currency(display_data[[i]]) else display_data[[i]]
-    }))
-    names(display_data) <- names(data)
+  # For vectors - process each element
+  if(length(x) > 1) {
+    return(sapply(x, format_number))
   }
   
+  # Force numeric conversion and handle edge cases
+  tryCatch({
+    # First try direct conversion
+    x_numeric <- as.numeric(x)
+    
+    # Check if conversion worked
+    if(is.na(x_numeric) && !is.na(x)) {
+      # If conversion failed but x wasn't NA, try parsing with special handling
+      x_str <- as.character(x)
+      # Remove any non-numeric characters except decimal point
+      x_str <- gsub("[^0-9.-]", "", x_str)
+      x_numeric <- as.numeric(x_str)
+    }
+    
+    # Use the converted value
+    x <- x_numeric
+  }, error = function(e) {
+    # If all else fails, return "0" for unconvertible values
+    return("0")
+  })
+  
+  # Check for NA or zero
+  if (is.na(x) || x == 0) return("0")
+  
+  # Apply abbreviations based on value size and configuration settings
+  if (abs(x) >= numeric_config$abbreviateThreshold && isTRUE(numeric_config$abbreviateMillions)) {
+    # Millions
+    return(sprintf(numeric_config$millionsFormat, x / 1e6))
+  } else if (abs(x) >= numeric_config$thousandsThreshold && isTRUE(numeric_config$abbreviateThousands)) {
+    # Thousands
+    return(sprintf(numeric_config$thousandsFormat, x / 1e3))
+  } else {
+    # Regular formatting with commas
+    if (isTRUE(numeric_config$useThousandsSeparator)) {
+      return(sprintf(numeric_config$standardFormat, 
+                     format(round(x, numeric_config$decimalPlaces), big.mark = ",")))
+    } else {
+      return(sprintf(numeric_config$standardFormat, 
+                     format(round(x, numeric_config$decimalPlaces))))
+    }
+  }
+}
+
+# Create standardized data tables
+create_datatable <- function(data, currency_cols = NULL) {
+  # Create a copy of the data for display
+  display_data <- data
+  
+  # Apply formatting to all columns
+  for (i in 1:ncol(display_data)) {
+    # 0-indexed column for DT
+    i_0 <- i - 1
+    
+    # Check if it's a numeric column
+    if (is.numeric(display_data[[i]])) {
+      # Check if it's a currency column
+      if (!is.null(currency_cols) && (i_0 %in% currency_cols)) {
+        display_data[[i]] <- format_currency(display_data[[i]])
+      } else {
+        # Apply numeric formatting to non-currency numeric columns
+        display_data[[i]] <- format_number(display_data[[i]])
+      }
+    }
+  }
+  
+  # Get all numeric columns (0-indexed for DT)
+  numeric_cols_0 <- which(sapply(data, is.numeric)) - 1
+  
+  # Create datatable with right-aligned numeric columns
   datatable(
     display_data,
     options = list(
@@ -71,7 +139,7 @@ create_datatable <- function(data, currency_cols = NULL) {
       scrollX = TRUE,
       autoWidth = FALSE,
       dom = 'lfrtip',
-      columnDefs = list(list(targets = currency_cols, className = 'dt-right')),
+      columnDefs = list(list(targets = numeric_cols_0, className = 'dt-right')),
       language = list(search = "Search:")
     ),
     class = 'table table-striped table-bordered',

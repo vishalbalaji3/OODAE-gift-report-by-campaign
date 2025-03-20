@@ -76,20 +76,26 @@ donorLevelsServer <- function(id, filtered_data, fiscal_years, summary_stats, ti
       # Add rows for each donor level
       for(i in 1:nrow(donor_data)) {
         row <- donor_data[i, ]
+        
+        # Format donor count with commas
+        formatted_donors <- format_number(row$Number_of_Donors)
+        
         percent <- sprintf("%.1f%%", (row$Total_Amount / grand_total) * 100)
         
         html_table <- paste0(html_table, '<tr>',
                              '<td>', row$Donor_Level, '</td>',
-                             '<td class="text-right">', row$Number_of_Donors, '</td>',
+                             '<td class="text-right">', formatted_donors, '</td>',
                              '<td class="text-right">', format_currency(row$Total_Amount), '</td>',
                              '<td class="text-right">', percent, '</td>',
                              '</tr>')
       }
       
-      # Add totals row
+      # Add totals row with formatted number
+      formatted_total_donors <- format_number(total_donors)
+      
       html_table <- paste0(html_table, '<tr class="info">',
                            '<th>Total</th>',
-                           '<th class="text-right">', total_donors, '</th>',
+                           '<th class="text-right">', formatted_total_donors, '</th>',
                            '<th class="text-right">', format_currency(grand_total), '</th>',
                            '<th class="text-right">100.0%</th>',
                            '</tr></tbody></table>')

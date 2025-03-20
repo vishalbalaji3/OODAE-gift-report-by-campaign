@@ -57,11 +57,11 @@ fullDataServer <- function(id, filtered_data, fiscal_years, summary_stats, time_
                            '<th class="text-right">Value</th>',
                            '</tr></thead><tbody>')
       
-      # Add summary rows
+      # Add summary rows with formatted values
       html_table <- paste0(html_table, '<tr><td>', time_label, '(s)</td><td class="text-right">', year_range, '</td></tr>')
-      html_table <- paste0(html_table, '<tr><td>Total Number of Gifts</td><td class="text-right">', format(stats$total_gifts, big.mark = ","), '</td></tr>')
+      html_table <- paste0(html_table, '<tr><td>Total Number of Gifts</td><td class="text-right">', format_number(stats$total_gifts), '</td></tr>')
       html_table <- paste0(html_table, '<tr><td>Total Gift Amount</td><td class="text-right">', format_currency(stats$total_amount), '</td></tr>')
-      html_table <- paste0(html_table, '<tr><td>Unique Constituents</td><td class="text-right">', format(stats$total_constituents, big.mark = ","), '</td></tr>')
+      html_table <- paste0(html_table, '<tr><td>Unique Constituents</td><td class="text-right">', format_number(stats$total_constituents), '</td></tr>')
       html_table <- paste0(html_table, '<tr><td>Average Gift Size</td><td class="text-right">', format_currency(stats$avg_gift_size), '</td></tr>')
       
       html_table <- paste0(html_table, '</tbody></table>')

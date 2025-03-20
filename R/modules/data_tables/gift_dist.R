@@ -56,6 +56,11 @@ giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats, time_
       display_data <- data %>%
         select(Gift_Range, all_of(gift_count_cols), Total_Gifts)
       
+      # Format numeric columns with commas
+      for(col in c(gift_count_cols, "Total_Gifts")) {
+        display_data[[col]] <- format_number(display_data[[col]])
+      }
+      
       # Rename columns to remove prefixes and use cleaner names
       new_names <- names(display_data)
       

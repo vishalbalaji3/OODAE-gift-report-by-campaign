@@ -97,6 +97,19 @@ config <- list(
     percentage = list(
       decimalPlaces = 1,           # Number of decimal places
       addPercentSign = TRUE        # Whether to add % sign
+    ),
+    
+    # Numeric formatting
+    numeric = list(
+      useThousandsSeparator = TRUE,  # Whether to use commas as thousands separators
+      decimalPlaces = 0,             # Number of decimal places
+      abbreviateMillions = FALSE,    # Whether to abbreviate millions (e.g., 1.2M)
+      abbreviateThousands = FALSE,   # Whether to abbreviate thousands (e.g., 1.2K)
+      abbreviateThreshold = 1e6,     # Threshold for M abbreviation (1,000,000)
+      thousandsThreshold = 1e3,      # Threshold for K abbreviation (1,000)
+      millionsFormat = "%.1fM",      # Format for millions values
+      thousandsFormat = "%.1fK",     # Format for thousands values
+      standardFormat = "%s"          # Format for standard values
     )
   )
 )

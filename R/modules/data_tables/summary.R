@@ -106,7 +106,9 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
         # Add rows for each gift range using totals
         for(i in 1:nrow(dist_data)) {
           row <- dist_data[i, ]
-          gift_count <- row$Total_Gifts
+          
+          # Format gift count with commas
+          gift_count <- format_number(row$Total_Gifts)
           
           # Ensure amount is numeric before formatting
           amount_value <- as.numeric(row$Total_Amount)
@@ -120,7 +122,7 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
         }
         
         # Add totals row
-        total_gifts <- sum(dist_data$Total_Gifts, na.rm = TRUE)
+        total_gifts <- format_number(sum(dist_data$Total_Gifts, na.rm = TRUE))
         total_amount <- sum(as.numeric(dist_data$Total_Amount), na.rm = TRUE)
       } else {
         # Use only the most recent year data
@@ -141,7 +143,10 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
         # Add rows for each gift range
         for(i in 1:nrow(dist_data)) {
           row <- dist_data[i, ]
-          gift_count <- if(gift_count_col %in% names(row)) row[[gift_count_col]] else 0
+          
+          # Get and format gift count with commas
+          gift_count_value <- if(gift_count_col %in% names(row)) row[[gift_count_col]] else 0
+          gift_count <- format_number(gift_count_value)
           
           # Ensure amount is numeric before formatting
           amount_value <- if(amount_col %in% names(row)) as.numeric(row[[amount_col]]) else 0
@@ -154,8 +159,9 @@ summaryStatisticsServer <- function(id, filtered_data, fiscal_years, summary_sta
                                '</tr>')
         }
         
-        # Add totals row
-        total_gifts <- sum(dist_data[[gift_count_col]], na.rm = TRUE)
+        # Add totals row with formatted values
+        total_gifts_value <- sum(dist_data[[gift_count_col]], na.rm = TRUE)
+        total_gifts <- format_number(total_gifts_value)
         total_amount <- sum(as.numeric(dist_data[[amount_col]]), na.rm = TRUE)
       }
       

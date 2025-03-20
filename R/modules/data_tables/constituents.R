@@ -61,17 +61,22 @@ constituentsServer <- function(id, filtered_data, fiscal_years, summary_stats, t
         row <- const_data[i, ]
         percent <- sprintf("%.1f%%", (row$Total / total_constituents) * 100)
         
+        # Format constituent count with commas
+        formatted_total <- format_number(row$Total)
+        
         html_table <- paste0(html_table, '<tr>',
                              '<td>', row$`Primary Constituency Code`, '</td>',
-                             '<td class="text-right">', format(row$Total, big.mark = ","), '</td>',
+                             '<td class="text-right">', formatted_total, '</td>',
                              '<td class="text-right">', percent, '</td>',
                              '</tr>')
       }
       
-      # Add totals row
+      # Add totals row with formatted value
+      formatted_total_constituents <- format_number(total_constituents)
+      
       html_table <- paste0(html_table, '<tr class="info">',
                            '<th>Total</th>',
-                           '<th class="text-right">', format(total_constituents, big.mark = ","), '</th>',
+                           '<th class="text-right">', formatted_total_constituents, '</th>',
                            '<th class="text-right">100.0%</th>',
                            '</tr></tbody></table>')
       

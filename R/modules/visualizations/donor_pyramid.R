@@ -147,6 +147,7 @@ donorPyramidServer <- function(id, filtered_data, fiscal_years, summary_stats, t
       # Format metrics
       formatted_amount <- format_currency(total_amount)
       formatted_avg <- format_currency(avg_gift_size)
+      formatted_donors <- format_number(total_donors)
       
       # Create HTML with tooltips
       html <- paste0(
@@ -155,7 +156,7 @@ donorPyramidServer <- function(id, filtered_data, fiscal_years, summary_stats, t
         '<div class="col-md-3 col-sm-6">',
         '<div class="panel panel-info" data-toggle="tooltip" title="Total number of unique donors across all giving levels">',
         '<div class="panel-heading text-center"><strong>Total Donors</strong></div>',
-        '<div class="panel-body text-center"><h3>', format(total_donors, big.mark = ","), '</h3></div>',
+        '<div class="panel-body text-center"><h3>', formatted_donors, '</h3></div>',
         '</div></div>',
         
         '<div class="col-md-3 col-sm-6">',
@@ -241,7 +242,7 @@ donorPyramidServer <- function(id, filtered_data, fiscal_years, summary_stats, t
           hoverinfo = "text",
           hovertext = ~paste(
             "Level:", Donor_Level,
-            "<br>Donors:", format(Donors, big.mark = ","),
+            "<br>Donors:", format_number(Donors),
             "<br>Amount:", format_currency(Amount),
             "<br>% of Donors:", sprintf("%.1f%%", Donor_Percent),
             "<br>% of Amount:", sprintf("%.1f%%", Amount_Percent)

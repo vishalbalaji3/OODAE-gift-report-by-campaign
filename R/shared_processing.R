@@ -103,9 +103,12 @@ create_summary_table <- function(data, id_col, value_col, percent_col = NULL,
     total_label <- if(!is.null(overall_total) && overall_total > grand_total) 
       "Total (Top 5)" else "Total"
     
+    # Format the grand total
+    formatted_grand_total <- format_fn(grand_total)
+    
     html_table <- paste0(html_table, '<tr class="info">',
                          '<th>', total_label, '</th>',
-                         '<th class="text-right">', format_fn(grand_total), '</th>')
+                         '<th class="text-right">', formatted_grand_total, '</th>')
     
     if(!is.null(percent_col)) {
       percent_total <- if(!is.null(overall_total)) 
