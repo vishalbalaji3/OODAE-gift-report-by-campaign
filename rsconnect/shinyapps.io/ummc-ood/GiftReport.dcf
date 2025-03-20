@@ -5,7 +5,7 @@ account: ummc-ood
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 13697426
-bundleId: 9899130
+bundleId: 9976921
 url: https://ummc-ood.shinyapps.io/GiftReport/
 version: 1
 asMultiple: FALSE

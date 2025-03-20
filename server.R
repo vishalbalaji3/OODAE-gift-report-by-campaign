@@ -206,6 +206,7 @@ server <- function(input, output, session) {
   
   # Initialize visualization modules
   donorPyramidServer("donor_pyramid", filtered_data_viz, fiscal_years_viz, summary_stats_viz, reactive({input$vizFilter_timeframe}))
+  donorRetentionServer("donor_retention", filtered_data_viz, fiscal_years_viz, summary_stats_viz, reactive({input$vizFilter_timeframe}))
   
   # Synchronize filters between tabs (optional)
   # This helps maintain consistent filtering when switching between tabs
