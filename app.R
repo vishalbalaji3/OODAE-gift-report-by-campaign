@@ -234,17 +234,20 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
+  # Create a timestamp when the app starts
+  app_start_time <- Sys.time()
+  
   # Load processed data once at startup
   full_data <- prepare_data()
   
-  # Display last updated information
+  # Get data file information for last updated
+  data_file_info <- file.info(PATHS$raw_gifts)
+  data_last_modified <- data_file_info$mtime
+  
+  # Display last updated information using actual file modification time
   output$lastUpdatedText <- renderText({
-    processed_at <- attr(full_data, "processed_at")
-    if (!is.null(processed_at)) {
-      paste("Data last processed:", format(processed_at, "%B %d, %Y at %I:%M %p"))
-    } else {
-      ""
-    }
+    paste("Data last updated:", format(data_last_modified, "%B %d, %Y at %I:%M %p"),
+          "| Dashboard refreshed:", format(app_start_time, "%B %d, %Y at %I:%M %p"))
   })
   
   # Extract unique values for filter options
