@@ -5,12 +5,12 @@
 # UI Function
 vizTemplateUI <- function(id) {
   ns <- NS(id)
-  
+
   tagList(
     fluidRow(
       column(12,
              div(class = "panel panel-default",
-                 div(class = "panel-heading", 
+                 div(class = "panel-heading",
                      h4("Visualization Title")),
                  div(class = "panel-body",
                      # Summary metrics above the visualization
@@ -21,7 +21,7 @@ vizTemplateUI <- function(id) {
              )
       )
     ),
-    
+
     # Download options
     fluidRow(
       column(12,
@@ -38,25 +38,25 @@ vizTemplateUI <- function(id) {
 # Server Function
 vizTemplateServer <- function(id, filtered_data, fiscal_years, summary_stats) {
   moduleServer(id, function(input, output, session) {
-    
+
     # Reactive expression for processed data specific to this visualization
     processed_data <- reactive({
       # Process the filtered data for this specific visualization
       # Return the processed data
     })
-    
+
     # Render summary metrics
     output$vizSummary <- renderUI({
       # Create HTML summary
       HTML("Summary content goes here")
     })
-    
+
     # Render the main visualization
     output$mainPlot <- renderPlotly({
       # Create the plotly visualization
       plot_ly(...)
     })
-    
+
     # Define download handlers
     output$download_pdf <- downloadHandler(
       filename = function() {
@@ -66,7 +66,7 @@ vizTemplateServer <- function(id, filtered_data, fiscal_years, summary_stats) {
         # PDF export logic
       }
     )
-    
+
     output$download_png <- downloadHandler(
       filename = function() {
         paste0("visualization_", Sys.Date(), ".png")
@@ -75,7 +75,7 @@ vizTemplateServer <- function(id, filtered_data, fiscal_years, summary_stats) {
         # PNG export logic
       }
     )
-    
+
     output$download_csv <- downloadHandler(
       filename = function() {
         paste0("visualization_data_", Sys.Date(), ".csv")

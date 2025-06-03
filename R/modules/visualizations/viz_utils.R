@@ -5,9 +5,9 @@
 # Time period selector UI element
 timePeriodSelectorUI <- function(id) {
   ns <- NS(id)
-  
+
   radioButtons(ns("timeframe"), "Select Time Period:",
-               choices = c("Fiscal Year (Jul-Jun)" = "fiscal", 
+               choices = c("Fiscal Year (Jul-Jun)" = "fiscal",
                            "Calendar Year (Jan-Dec)" = "calendar"),
                selected = "fiscal",
                inline = TRUE)
@@ -40,14 +40,14 @@ filter_by_time_period <- function(data, selected_years, timeframe = "fiscal") {
   if(length(selected_years) == 0) {
     return(data)  # If no years selected, return all data
   }
-  
+
   if(timeframe == "calendar") {
     # Filter by calendar years
-    data %>% 
+    data %>%
       filter(format(as.Date(`Gift Date`), "%Y") %in% selected_years)
   } else {
     # Filter by fiscal years (default)
-    data %>% 
+    data %>%
       filter(`Fiscal Year` %in% selected_years)
   }
 }
@@ -70,7 +70,7 @@ apply_viz_theme <- function(p) {
 # Create standardized visualization download handlers
 create_viz_download_handlers <- function(id, plot_output, data_reactive, session) {
   output_name <- function(ext) paste0(id, "_", Sys.Date(), ext)
-  
+
   list(
     png = downloadHandler(
       filename = function() output_name(".png"),

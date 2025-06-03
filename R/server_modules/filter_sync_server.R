@@ -2,9 +2,9 @@
 # Handles synchronization of filters between different tabs
 
 #' Initialize Filter Synchronization
-#' 
+#'
 #' Sets up observers to synchronize filters between Data Tables and Visualizations tabs
-#' 
+#'
 #' @param input Shiny input object
 #' @param session Shiny session object
 initializeFilterSynchronization <- function(input, session) {
@@ -21,9 +21,9 @@ initializeFilterSynchronization <- function(input, session) {
 }
 
 #' Synchronize filters to Data Tables tab
-#' 
+#'
 #' Updates Data Tables filters based on current Visualization filters
-#' 
+#'
 #' @param input Shiny input object
 #' @param session Shiny session object
 syncFiltersToDataTables <- function(input, session) {
@@ -38,9 +38,9 @@ syncFiltersToDataTables <- function(input, session) {
 }
 
 #' Synchronize filters to Visualizations tab
-#' 
+#'
 #' Updates Visualization filters based on current Data Tables filters
-#' 
+#'
 #' @param input Shiny input object
 #' @param session Shiny session object
 syncFiltersToVisualizations <- function(input, session) {
@@ -52,4 +52,4 @@ syncFiltersToVisualizations <- function(input, session) {
   }
   updateRadioButtons(session, "vizFilter_timeframe", selected = input$dataTabFilter_timeframe)
   # Year filter will update automatically via the reactive UI
-} 
+}

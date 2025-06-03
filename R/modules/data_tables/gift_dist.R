@@ -3,32 +3,32 @@
 # UI Function
 giftDistUI <- function(id) {
   ns <- NS(id)
-  
+
   tagList(
     fluidRow(
-      column(12, 
+      column(12,
              div(class = "panel panel-default",
-                 div(class = "panel-heading", 
+                 div(class = "panel-heading",
                      h4("Gift Count by Range")),
                  div(class = "panel-body",
                      withSpinner(DTOutput(ns("giftCountTable"))))
              )
       )
     ),
-    
+
     hr(),
-    
+
     fluidRow(
-      column(12, 
+      column(12,
              div(class = "panel panel-default",
-                 div(class = "panel-heading", 
+                 div(class = "panel-heading",
                      h4("Gift Amount by Range")),
                  div(class = "panel-body",
                      withSpinner(DTOutput(ns("giftAmountTable"))))
              )
       )
     ),
-    
+
     create_download_buttons(ns)
   )
 }
@@ -36,29 +36,29 @@ giftDistUI <- function(id) {
 # Server Function
 giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats, time_period = reactive("fiscal")) {
   moduleServer(id, function(input, output, session) {
-    
+
     # Reactive expression for processed data
     processed_data <- reactive({
       process_gift_distribution_data(filtered_data(), time_period = time_period())
     })
-    
+
     # Gift Count Table renderer
     output$giftCountTable <- renderDT({
       data <- processed_data()
-      
+
       # Determine prefix based on time period
       prefix <- ifelse(time_period() == "calendar", "CY", "FY")
-      
+
       # Get column names for gift counts
       gift_count_cols <- grep("^Number_of_Gifts_", names(data), value = TRUE)
-      
+
       # Create a display data frame with just the count columns
       display_data <- data %>%
         select(Gift_Range, all_of(gift_count_cols), Total_Gifts)
-      
+
       # Rename columns to remove prefixes and use cleaner names
       new_names <- names(display_data)
-      
+
       # Clean up gift count column names and add appropriate prefix
       for (col in gift_count_cols) {
         # Extract the year part
@@ -79,16 +79,16 @@ giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats, time_
         }
         new_names[which(names(display_data) == col)] <- new_col_name
       }
-      
+
       # Rename total column
       new_names[which(names(display_data) == "Total_Gifts")] <- "Total"
-      
+
       # Apply new column names
       names(display_data) <- new_names
-      
+
       # Determine which columns should be right-aligned (numbers)
       number_cols <- which(names(display_data) != "Gift_Range") - 1
-      
+
       # Create the datatable with appropriate formatting
       dt <- datatable(
         display_data,
@@ -108,32 +108,32 @@ giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats, time_
         selection = 'none',
         rownames = FALSE
       )
-      
+
       # Apply number formatting to numeric columns (maintaining sorting)
       if (length(number_cols) > 0) {
         dt <- dt %>% formatRound(number_cols + 1, digits = 0, mark = ",")
       }
-      
+
       return(dt)
     })
-    
+
     # Gift Amount Table renderer
     output$giftAmountTable <- renderDT({
       data <- processed_data()
-      
+
       # Determine prefix based on time period
       prefix <- ifelse(time_period() == "calendar", "CY", "FY")
-      
+
       # Get column names for amounts
       amount_cols <- grep("^Total_Amount_", names(data), value = TRUE)
-      
+
       # Create a display data frame with just the amount columns
       display_data <- data %>%
         select(Gift_Range, all_of(amount_cols), Total_Amount)
-      
+
       # Rename columns to remove prefixes and use cleaner names
       new_names <- names(display_data)
-      
+
       # Clean up amount column names and add appropriate prefix
       for (col in amount_cols) {
         # Extract the year part
@@ -154,16 +154,16 @@ giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats, time_
         }
         new_names[which(names(display_data) == col)] <- new_col_name
       }
-      
+
       # Rename total column
       new_names[which(names(display_data) == "Total_Amount")] <- "Total"
-      
+
       # Apply new column names
       names(display_data) <- new_names
-      
+
       # All columns except Gift_Range should be right-aligned
       currency_cols <- which(names(display_data) != "Gift_Range") - 1
-      
+
       # Create the data table with appropriate formatting
       dt <- datatable(
         display_data,
@@ -183,18 +183,18 @@ giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats, time_
         selection = 'none',
         rownames = FALSE
       )
-      
+
       # Apply currency formatting to numeric columns (maintaining sorting)
       if (length(currency_cols) > 0) {
         dt <- dt %>% formatCurrency(currency_cols + 1, currency = "$", digits = 0)
       }
-      
+
       return(dt)
     })
-    
+
     # Create download handlers
     downloads <- create_download_handlers("gift_distribution_data", processed_data, session)
-    
+
     # Assign download handlers
     output$download_csv <- downloads$csv
     output$download_excel <- downloads$excel

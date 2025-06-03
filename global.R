@@ -31,22 +31,34 @@ source("R/data_processing.R")
 source("R/shared_processing.R")
 
 # Source server modules
-server_module_files <- list.files(path = "R/server_modules", pattern = "\\.R$", full.names = TRUE)
+server_module_files <- list.files(
+  path = "R/server_modules",
+  pattern = "\\.R$",
+  full.names = TRUE
+)
 sapply(server_module_files, source)
 
 # Source data table modules
-data_table_files <- list.files(path = "R/modules/data_tables", pattern = "\\.R$", full.names = TRUE)
+data_table_files <- list.files(
+  path = "R/modules/data_tables",
+  pattern = "\\.R$",
+  full.names = TRUE
+)
 sapply(data_table_files, source)
 
 # Source visualization utility functions
 viz_utils_path <- "R/modules/visualizations/viz_utils.R"
-if(file.exists(viz_utils_path)) {
+if (file.exists(viz_utils_path)) {
   source(viz_utils_path)
 }
 
 # Source visualization modules
-viz_files <- list.files(path = "R/modules/visualizations", pattern = "\\.R$", full.names = TRUE)
-if(length(viz_files) > 0) {
+viz_files <- list.files(
+  path = "R/modules/visualizations",
+  pattern = "\\.R$",
+  full.names = TRUE
+)
+if (length(viz_files) > 0) {
   # Make sure viz_utils.R is sourced first if present
   viz_files <- viz_files[!grepl("viz_utils.R", viz_files)]
   sapply(viz_files, source)
