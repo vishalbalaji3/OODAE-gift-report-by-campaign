@@ -6,16 +6,15 @@ A Shiny web application for analyzing gift data by campaign, providing comprehen
 
 ```
 OODAE-gift-report-by-campaign/
-├── app.R                                 # 🎯 Main consolidated Shiny app
-├── data/                                # 📊 Essential data files
-│   ├── AllGifts.CSV                     # Main gift data (112MB)
-│   └── FundList.CSV                     # Fund information (76KB)
-├── README.md                            # 📖 Updated documentation
+├── app.R                                 # Main Shiny application (consolidated)
+├── data/                                # Data directory
+│   ├── AllGifts.CSV                     # Main gift data
+│   ├── FundList.CSV                     # Fund information
+│   └── TEMP_GIF.CSV                     # Additional gift data
 ├── OODAE-gift-report-by-campaign.Rproj # R Project file
 ├── .gitignore                           # Git ignore rules
-├── .Rhistory                           # R session history
-├── .Rproj.user/                        # RStudio user settings
-└── rsconnect/                          # Deployment configuration
+├── rsconnect/                           # Deployment configuration
+└── README.md                            # This file
 ```
 
 ## Overview
