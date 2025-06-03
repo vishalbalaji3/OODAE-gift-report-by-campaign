@@ -30,6 +30,10 @@ source("R/helpers.R")
 source("R/data_processing.R")
 source("R/shared_processing.R")
 
+# Source server modules
+server_module_files <- list.files(path = "R/server_modules", pattern = "\\.R$", full.names = TRUE)
+sapply(server_module_files, source)
+
 # Source data table modules
 data_table_files <- list.files(path = "R/modules/data_tables", pattern = "\\.R$", full.names = TRUE)
 sapply(data_table_files, source)
