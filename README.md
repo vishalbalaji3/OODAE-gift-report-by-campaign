@@ -1,12 +1,12 @@
 # OODAE Gift Report Dashboard
 
-A Shiny web application for analyzing gift data by campaign, with a modular architecture for easy maintenance and reuse across different reporting tools.
+A Shiny web application for analyzing gift data by campaign, with a simplified and consolidated architecture for easy maintenance and deployment.
 
 ## Project Structure
 
 ```
 OODAE-gift-report-by-campaign/
-├── app.R                                 # Main Shiny application (UI/Server only)
+├── app.R                                # Main Shiny application (consolidated UI/Server)
 ├── config.R                             # Configuration settings and mappings
 ├── helpers.R                            # Utility functions for formatting and validation
 ├── data_prep.R                          # Data preparation and analysis functions
@@ -17,7 +17,7 @@ OODAE-gift-report-by-campaign/
 │       ├── clean_data.rds               # Processed data (auto-generated)
 │       ├── last_updated.txt             # Processing timestamp
 │       └── data_prep.log                # Processing log
-├── OODAE-gift-report-by-campaign.Rproj # R Project file
+├── OODAE-gift-report-by-campaign.Rproj  # R Project file
 ├── .gitignore                           # Git ignore rules
 ├── rsconnect/                           # Deployment configuration
 └── README.md                            # This file
@@ -25,20 +25,22 @@ OODAE-gift-report-by-campaign/
 
 ## Architecture Overview
 
-This application uses a **separated data preparation architecture** with distinct modules:
+This application uses a **simplified, consolidated architecture** with all components in the root directory:
 
 - **`config.R`**: Configuration settings, mappings, and file paths
 - **`helpers.R`**: Utility functions for formatting, validation, and logging
 - **`data_prep.R`**: Data loading, cleaning, processing, and analysis functions
-- **`app.R`**: Shiny UI and server logic only
+- **`app.R`**: Complete Shiny application with UI and server logic
 
 ### Benefits of This Structure
 
-1. **Reusability**: Data preparation can be used for Quarto reports, PowerBI, or other tools
-2. **Performance**: Data is processed once and cached, not on every dashboard load
-3. **Maintainability**: Clear separation between data logic and presentation logic
-4. **Testing**: Each component can be tested and validated independently
-5. **Scalability**: Easy to extend with new analysis functions or data sources
+1. **Simplicity**: All code in one location for easy navigation and maintenance
+2. **Reusability**: Data preparation can be used for Quarto reports, PowerBI, or other tools
+3. **Performance**: Data is processed once and cached, not on every dashboard load
+4. **Maintainability**: Clear separation between data logic and presentation logic
+5. **Deployment**: Single file structure simplifies deployment to ShinyApps.io
+6. **Testing**: Each component can be tested and validated independently
+7. **Scalability**: Easy to extend with new analysis functions or data sources
 
 ## Key Features
 
@@ -55,10 +57,13 @@ This application uses a **separated data preparation architecture** with distinc
 
 ### Advanced Features
 - **Smart Caching**: Data is only reprocessed when source files change
+- **Data Last Updated Display**: Shows actual file modification time (not processing time)
+- **Dashboard Refresh Time**: Shows when the dashboard was last refreshed
 - **Comprehensive Logging**: All data processing steps are logged with timestamps
 - **Data Validation**: Automatic checks for required files and data integrity
 - **Flexible Configuration**: Easy to modify mappings and settings without code changes
 - **Export Functionality**: CSV downloads for all data tables with proper formatting
+- **Dual Timeframe Support**: Switch between Fiscal Year and Calendar Year analysis
 
 ## Requirements
 
@@ -115,6 +120,20 @@ source("data_prep.R")
 shiny::runApp()
 ```
 
+## Data Last Updated Logic
+
+The dashboard displays two important timestamps:
+
+1. **Data last updated**: The actual file modification time of `AllGifts.CSV`
+   - This shows when your data file was last modified/uploaded
+   - Uses `file.info(PATHS$raw_gifts)$mtime` to get the true file timestamp
+   
+2. **Dashboard refreshed**: When the Shiny application was last started
+   - This shows when the dashboard was last reloaded/refreshed
+   - Uses `Sys.time()` from when the server function starts
+
+This provides transparency about both data freshness and dashboard state.
+
 ## Data Preparation Workflow
 
 ### Automatic Processing
@@ -151,17 +170,18 @@ Rscript data_prep.R
 
 ### Processing Settings (config.R)
 - Date formats
-- Fiscal year start month
+- Fiscal year start month (July = month 7)
 - Data filtering rules
 
 ## Usage
 
 ### For Dashboard Users
 1. **Launch Application**: `shiny::runApp()`
-2. **Apply Filters**: Use the filter panel to narrow down data
-3. **Explore Tabs**: Navigate between different analysis views
-4. **Download Data**: Use download buttons to export results
-5. **Switch Timeframes**: Toggle between Fiscal Year and Calendar Year views
+2. **Check Data Freshness**: Review the "Data last updated" timestamp in the header
+3. **Apply Filters**: Use the filter panel to narrow down data
+4. **Explore Tabs**: Navigate between different analysis views
+5. **Download Data**: Use download buttons to export results
+6. **Switch Timeframes**: Toggle between Fiscal Year and Calendar Year views
 
 ### For Data Analysts
 ```r
@@ -222,6 +242,10 @@ Expected columns:
    - For very large datasets, consider increasing R memory limits
    - Process data outside of Shiny if needed
 
+5. **Data Last Updated Not Showing**
+   - Verify `AllGifts.CSV` exists in the `data/` directory
+   - Check file permissions if timestamp appears incorrect
+
 ### Debug Mode
 ```r
 # Enable detailed logging
@@ -235,6 +259,10 @@ print(file_checks)
 # Check if processed data is current
 is_current <- is_processed_data_current()
 print(is_current)
+
+# Check file modification time
+file_info <- file.info("data/AllGifts.CSV")
+print(file_info$mtime)
 ```
 
 ## Development & Extension
@@ -267,6 +295,7 @@ write.csv(prepare_data(), "processed_data.csv", row.names = FALSE)
 - **Caching**: Processed data is automatically cached and updated when source files change
 - **Logging**: All processing steps are logged to `data/processed/data_prep.log`
 - **Performance**: Initial load may take time for large datasets, subsequent loads are fast
+- **Data Timestamps**: Dashboard shows actual file modification time, not processing time
 
 ## Contributing
 
