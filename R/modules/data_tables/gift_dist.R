@@ -56,11 +56,6 @@ giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats, time_
       display_data <- data %>%
         select(Gift_Range, all_of(gift_count_cols), Total_Gifts)
       
-      # Format numeric columns with commas
-      for(col in c(gift_count_cols, "Total_Gifts")) {
-        display_data[[col]] <- format_number(display_data[[col]])
-      }
-      
       # Rename columns to remove prefixes and use cleaner names
       new_names <- names(display_data)
       
@@ -95,7 +90,7 @@ giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats, time_
       number_cols <- which(names(display_data) != "Gift_Range") - 1
       
       # Create the datatable with appropriate formatting
-      datatable(
+      dt <- datatable(
         display_data,
         caption = "Number of Gifts by Gift Range",
         options = list(
@@ -110,8 +105,16 @@ giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats, time_
         ),
         class = 'cell-border stripe',
         filter = 'none',
-        selection = 'none'
+        selection = 'none',
+        rownames = FALSE
       )
+      
+      # Apply number formatting to numeric columns (maintaining sorting)
+      if (length(number_cols) > 0) {
+        dt <- dt %>% formatRound(number_cols + 1, digits = 0, mark = ",")
+      }
+      
+      return(dt)
     })
     
     # Gift Amount Table renderer
@@ -127,11 +130,6 @@ giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats, time_
       # Create a display data frame with just the amount columns
       display_data <- data %>%
         select(Gift_Range, all_of(amount_cols), Total_Amount)
-      
-      # Format currency values
-      for (col in c(amount_cols, "Total_Amount")) {
-        display_data[[col]] <- format_currency(display_data[[col]])
-      }
       
       # Rename columns to remove prefixes and use cleaner names
       new_names <- names(display_data)
@@ -167,7 +165,7 @@ giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats, time_
       currency_cols <- which(names(display_data) != "Gift_Range") - 1
       
       # Create the data table with appropriate formatting
-      datatable(
+      dt <- datatable(
         display_data,
         caption = "Gift Amount by Gift Range",
         options = list(
@@ -182,8 +180,16 @@ giftDistServer <- function(id, filtered_data, fiscal_years, summary_stats, time_
         ),
         class = 'cell-border stripe',
         filter = 'none',
-        selection = 'none'
+        selection = 'none',
+        rownames = FALSE
       )
+      
+      # Apply currency formatting to numeric columns (maintaining sorting)
+      if (length(currency_cols) > 0) {
+        dt <- dt %>% formatCurrency(currency_cols + 1, currency = "$", digits = 0)
+      }
+      
+      return(dt)
     })
     
     # Create download handlers
