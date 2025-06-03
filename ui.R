@@ -22,25 +22,8 @@ ui <- fluidPage(
     
     # Data Tables Tab
     tabPanel("Data Tables", 
-             # Put filters inside each main tab
-             div(
-               class = "well",
-               h4("Filter Data", class = "text-primary"),
-               fluidRow(
-                 column(3, selectInput("dataTabFilter_campaign", "Select Campaign ID:",
-                                       choices = unique(FullData$`Campaign ID`),
-                                       selected = unique(FullData$`Campaign ID`)[1])),
-                 column(3, selectInput("dataTabFilter_giftType", "Select Gift Type:",
-                                       choices = levels(FullData$`Gift Type`),
-                                       multiple = TRUE)),
-                 column(3, radioButtons("dataTabFilter_timeframe", "Time Period:",
-                                        choices = c("Fiscal Year" = "fiscal", 
-                                                    "Calendar Year" = "calendar"),
-                                        selected = "fiscal",
-                                        inline = TRUE)),
-                 column(3, uiOutput("dataTabFilter_yearUI"))
-               )
-             ),
+             # Use shared filter panel component
+             create_filter_panel("dataTabFilter"),
              
              # Data tables tabs
              tabsetPanel(
@@ -59,25 +42,8 @@ ui <- fluidPage(
     
     # Visualizations Tab
     tabPanel("Visualizations",
-             # Similar filters for visualizations
-             div(
-               class = "well",
-               h4("Filter Data", class = "text-primary"),
-               fluidRow(
-                 column(3, selectInput("vizFilter_campaign", "Select Campaign ID:",
-                                       choices = unique(FullData$`Campaign ID`),
-                                       selected = unique(FullData$`Campaign ID`)[1])),
-                 column(3, selectInput("vizFilter_giftType", "Select Gift Type:",
-                                       choices = levels(FullData$`Gift Type`),
-                                       multiple = TRUE)),
-                 column(3, radioButtons("vizFilter_timeframe", "Time Period:",
-                                        choices = c("Fiscal Year" = "fiscal", 
-                                                    "Calendar Year" = "calendar"),
-                                        selected = "fiscal",
-                                        inline = TRUE)),
-                 column(3, uiOutput("vizFilter_yearUI"))
-               )
-             ),
+             # Use shared filter panel component
+             create_filter_panel("vizFilter"),
              
              # Visualization tabs
              tabsetPanel(

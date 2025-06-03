@@ -19,6 +19,12 @@ source("config.R")
 # Source data preparation
 source("data_prep.R")
 
+# Source centralized filter manager
+source("R/filter_manager.R")
+
+# Source shared UI components
+source("R/ui_components.R")
+
 # Source helper functions
 source("R/helpers.R")
 source("R/data_processing.R")
