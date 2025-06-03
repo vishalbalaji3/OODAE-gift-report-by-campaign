@@ -4,22 +4,11 @@
 topDonorsUI <- function(id) {
   ns <- NS(id)
 
-  tagList(
-    fluidRow(
-      column(12,
-             div(class = "panel panel-default",
-                 div(class = "panel-heading",
-                     h4("Top Donors Summary")),
-                 div(class = "panel-body",
-                     uiOutput(ns("topDonorsSummary")))
-             )
-      )
-    ),
-
-    div(class = "table-responsive",
-        withSpinner(DTOutput(ns("topDonorsTable")))),
-
-    create_download_buttons(ns)
+  create_module_ui(
+    title = "Top Donors Summary",
+    summary_output = uiOutput(ns("topDonorsSummary")),
+    table_output = DTOutput(ns("topDonorsTable")),
+    download_ns = ns
   )
 }
 
@@ -36,7 +25,7 @@ topDonorsServer <- function(id, filtered_data, fiscal_years, summary_stats, time
     output$topDonorsSummary <- renderUI({
       # Use shared fiscal_years reactive
       if (length(fiscal_years()) == 0) {
-        return(HTML("<p>No data available for the selected filters.</p>"))
+        return(create_alert("No data available for the selected filters.", type = "warning"))
       }
 
       # Process the top donors data (top 5)

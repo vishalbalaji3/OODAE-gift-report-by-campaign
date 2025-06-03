@@ -3,6 +3,9 @@
 ui <- fluidPage(
   # Keep your existing theme
   theme = shinythemes::shinytheme(config$ui$theme),
+  
+  # Include shared components CSS
+  includeCSS("www/shared_components.css"),
 
   # Title panel at the top
   fluidRow(
