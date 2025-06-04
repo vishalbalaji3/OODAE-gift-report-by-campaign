@@ -1,6 +1,6 @@
 # OODAE Gift Report Dashboard
 
-A Shiny web application for analyzing gift data by campaign, with a simplified and consolidated architecture for easy maintenance and deployment.
+A Shiny web application for analyzing gift data by campaign, with a simplified and consolidated architecture for easy maintenance and deployment. Features an intuitive, fundraiser-centric organization that follows industry best practices.
 
 ## Project Structure
 
@@ -41,19 +41,39 @@ This application uses a **simplified, consolidated architecture** with all compo
 5. **Deployment**: Single file structure simplifies deployment to ShinyApps.io
 6. **Testing**: Each component can be tested and validated independently
 7. **Scalability**: Easy to extend with new analysis functions or data sources
+8. **Intuitive Naming**: Functions and variables use clear, descriptive names
+
+## Dashboard Organization
+
+The dashboard follows a **fundraiser-centric workflow** that aligns with industry best practices:
+
+### 📊 Campaign Performance
+- **Campaign Overview** - High-level KPIs and gift type breakdown with year-over-year analysis
+
+### 👥 Donor & Constituency Analysis
+- **🏆 Top Donors** - Top 50 donors by contribution amount
+- **📊 Donor Levels & Capacity** - Complete donor pyramid analysis (counts and amounts)
+- **👥 Constituency Breakdown** - Demographic breakdown of donor base
+- **🎯 Giving by Constituency** - Performance analysis by donor constituency groups
+
+### 💰 Gift Analysis
+- **📏 Gift Range Analysis** - Distribution analysis by gift amount ranges
+- **📈 Average Gift by Constituency** - Average gift size by constituency type
+- **🎁 Average Gift by Type** - Average gift size by gift type
+
+### 💵 Fund Analysis
+- **Top Funds Performance** - Top 5 funds summary and complete fund analysis
+
+### 📋 Operational Reports
+- **Complete Dataset** - Full filtered dataset view with export capabilities
+
+### Key Improvements
+- **Single-Click Access**: All reports accessible with 1-2 clicks maximum
+- **Visual Organization**: Emojis and clear headers for intuitive navigation
+- **Professional Terminology**: Uses standard fundraising industry language
+- **Logical Flow**: Follows typical fundraiser workflow from campaign overview to operational details
 
 ## Key Features
-
-### Data Analysis Views
-1. **Summary Statistics** - Gift type breakdown with year-over-year analysis
-2. **Fund Split by Constituency** - Analysis by donor constituency groups
-3. **Fund Analysis** - Performance by specific funds
-4. **Unique Constituents** - Donor counts by year and constituency
-5. **Average Gift Size** - Analysis by constituency and gift type
-6. **Top Donors** - Top 50 donors by contribution amount
-7. **Gift Size Distribution** - Distribution analysis by gift amount ranges
-8. **Donor Levels** - Donor segmentation by total giving levels
-9. **Full Data** - Complete filtered dataset view
 
 ### Advanced Features
 - **Smart Caching**: Data is only reprocessed when source files change
@@ -62,8 +82,31 @@ This application uses a **simplified, consolidated architecture** with all compo
 - **Comprehensive Logging**: All data processing steps are logged with timestamps
 - **Data Validation**: Automatic checks for required files and data integrity
 - **Flexible Configuration**: Easy to modify mappings and settings without code changes
-- **Export Functionality**: CSV downloads for all data tables with proper formatting
+- **Professional Export**: CSV downloads with descriptive filenames and proper formatting
 - **Dual Timeframe Support**: Switch between Fiscal Year and Calendar Year analysis
+- **Intuitive Function Names**: Clear, self-documenting code structure
+
+## Core Analysis Functions
+
+The application includes these main analysis functions (all with intuitive, descriptive names):
+
+### Data Processing Functions
+- `calculate_campaign_overview()` - Campaign KPIs and gift type breakdown
+- `calculate_giving_by_constituency()` - Constituency performance analysis
+- `calculate_constituency_breakdown()` - Demographic analysis of donor base
+- `calculate_average_gift_insights()` - Average gift analysis by various dimensions
+- `calculate_gift_range_analysis()` - Gift distribution by amount ranges
+- `calculate_top_donors()` - Top donor identification and analysis
+- `calculate_donor_levels()` - Donor pyramid and capacity analysis
+- `calculate_fund_analysis()` - Fund performance and analysis
+
+### Export Functions
+All exports use descriptive filenames:
+- `campaign_overview_YYYY-MM-DD.csv`
+- `giving_by_constituency_YYYY-MM-DD.csv`
+- `constituency_breakdown_YYYY-MM-DD.csv`
+- `gift_range_counts_YYYY-MM-DD.csv`
+- `complete_dataset_YYYY-MM-DD.csv`
 
 ## Requirements
 
@@ -179,8 +222,13 @@ Rscript data_prep.R
 1. **Launch Application**: `shiny::runApp()`
 2. **Check Data Freshness**: Review the "Data last updated" timestamp in the header
 3. **Apply Filters**: Use the filter panel to narrow down data
-4. **Explore Tabs**: Navigate between different analysis views
-5. **Download Data**: Use download buttons to export results
+4. **Navigate Intuitively**: Use the fundraiser-centric organization to find reports quickly:
+   - Start with **📊 Campaign Performance** for overview
+   - Dive into **👥 Donor & Constituency Analysis** for donor insights
+   - Analyze trends in **💰 Gift Analysis** for strategic planning
+   - Review **💵 Fund Analysis** for fund performance
+   - Access raw data in **📋 Operational Reports**
+5. **Download Data**: Use download buttons to export results with descriptive filenames
 6. **Switch Timeframes**: Toggle between Fiscal Year and Calendar Year views
 
 ### For Data Analysts
@@ -189,10 +237,13 @@ Rscript data_prep.R
 source("data_prep.R")
 data <- prepare_data()
 
-# Use analysis functions directly
+# Use analysis functions directly (with new intuitive names)
 source("helpers.R")
-summary_stats <- calculate_summary_stats(data, timeframe = "fiscal")
-fund_analysis <- calculate_fund_analysis(data, timeframe = "fiscal")
+campaign_overview <- calculate_campaign_overview(data, timeframe = "fiscal")
+giving_analysis <- calculate_giving_by_constituency(data, timeframe = "fiscal")
+constituency_data <- calculate_constituency_breakdown(data, timeframe = "fiscal")
+gift_insights <- calculate_average_gift_insights(data, timeframe = "fiscal")
+fund_performance <- calculate_fund_analysis(data, timeframe = "fiscal")
 ```
 
 ### For Report Developers
@@ -204,6 +255,11 @@ source("data_prep.R")
 
 # Get clean data for your reports
 clean_data <- prepare_data()
+
+# Use analysis functions with descriptive names
+campaign_data <- calculate_campaign_overview(clean_data)
+donor_analysis <- calculate_top_donors(clean_data, n = 100)
+gift_ranges <- calculate_gift_range_analysis(clean_data)
 
 # Use formatting functions
 formatted_amount <- format_currency(1500000)  # Returns "$1.5M"

@@ -110,31 +110,92 @@ ui <- fluidPage(
       tabsetPanel(
         id = "dataTabset",
         
-        # Summary Statistics
-        tabPanel("Summary Statistics", 
+        # 📊 CAMPAIGN PERFORMANCE
+        tabPanel("📊 Campaign Performance", 
+          h3("Campaign Overview"),
           fluidRow(column(12, withSpinner(DT::dataTableOutput("summaryTable")))),
           fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
             downloadButton("downloadSummary", "Download CSV", class = "btn btn-primary btn-sm")
           )))
         ),
         
-        # Fund Split by Constituency
-        tabPanel("Fund Split by Constituency",
-          h4("Summary by Constituency"),
-          fluidRow(column(12, withSpinner(DT::dataTableOutput("fundSplitSummaryTable")))),
-          fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
-            downloadButton("downloadFundSplitSummary", "Download Summary CSV", class = "btn btn-primary btn-sm")
-          ))),
-          br(),
-          h4("Detailed Breakdown by Year"),
-          fluidRow(column(12, withSpinner(DT::dataTableOutput("fundSplitDetailTable")))),
-          fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
-            downloadButton("downloadFundSplit", "Download Detail CSV", class = "btn btn-primary btn-sm")
-          )))
+        # 👥 DONOR & CONSTITUENCY ANALYSIS
+        tabPanel("👥 Donor & Constituency Analysis",
+          tabsetPanel(
+            tabPanel("🏆 Top Donors",
+              fluidRow(column(12, withSpinner(DT::dataTableOutput("topDonorsTable")))),
+              fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
+                downloadButton("downloadTopDonors", "Download CSV", class = "btn btn-primary btn-sm")
+              )))
+            ),
+            tabPanel("📊 Donor Levels & Capacity",
+              h4("Number of Donors by Level"),
+              fluidRow(column(12, withSpinner(DT::dataTableOutput("donorCountsTable")))),
+              fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
+                downloadButton("downloadDonorCounts", "Download Counts CSV", class = "btn btn-primary btn-sm")
+              ))),
+              br(),
+              h4("Donation Amounts by Level"),
+              fluidRow(column(12, withSpinner(DT::dataTableOutput("donorAmountsTable")))),
+              fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
+                downloadButton("downloadDonorAmounts", "Download Amounts CSV", class = "btn btn-success btn-sm")
+              )))
+            ),
+            tabPanel("👥 Constituency Breakdown",
+              fluidRow(column(12, withSpinner(DT::dataTableOutput("constituentsTable")))),
+              fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
+                downloadButton("downloadConstituents", "Download CSV", class = "btn btn-primary btn-sm")
+              )))
+            ),
+            tabPanel("🎯 Giving by Constituency",
+              h4("Summary by Constituency"),
+              fluidRow(column(12, withSpinner(DT::dataTableOutput("fundSplitSummaryTable")))),
+              fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
+                downloadButton("downloadFundSplitSummary", "Download Summary CSV", class = "btn btn-primary btn-sm")
+              ))),
+              br(),
+              h4("Detailed Breakdown by Year"),
+              fluidRow(column(12, withSpinner(DT::dataTableOutput("fundSplitDetailTable")))),
+              fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
+                downloadButton("downloadFundSplit", "Download Detail CSV", class = "btn btn-primary btn-sm")
+              )))
+            )
+          )
         ),
         
-        # Fund Analysis
-        tabPanel("Fund Analysis",
+        # 💰 GIFT ANALYSIS
+        tabPanel("💰 Gift Analysis",
+          tabsetPanel(
+            tabPanel("📏 Gift Range Analysis",
+              h4("Gift Count by Range"),
+              fluidRow(column(12, withSpinner(DT::dataTableOutput("giftCountTable")))),
+              fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
+                downloadButton("downloadGiftCounts", "Download Counts CSV", class = "btn btn-primary btn-sm")
+              ))),
+              br(),
+              h4("Gift Amount by Range"),
+              fluidRow(column(12, withSpinner(DT::dataTableOutput("giftAmountTable")))),
+              fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
+                downloadButton("downloadGiftAmounts", "Download Amounts CSV", class = "btn btn-success btn-sm")
+              )))
+            ),
+            tabPanel("📈 Average Gift by Constituency",
+              fluidRow(column(12, withSpinner(DT::dataTableOutput("avgGiftConstituencyTable")))),
+              fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
+                downloadButton("downloadAvgGiftConstituency", "Download CSV", class = "btn btn-primary btn-sm")
+              )))
+            ),
+            tabPanel("🎁 Average Gift by Type",
+              fluidRow(column(12, withSpinner(DT::dataTableOutput("avgGiftTypeTable")))),
+              fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
+                downloadButton("downloadAvgGiftType", "Download CSV", class = "btn btn-success btn-sm")
+              )))
+            )
+          )
+        ),
+        
+        # 💵 FUND ANALYSIS
+        tabPanel("💵 Fund Analysis",
           h4("Top 5 Funds Summary"),
           fluidRow(column(12, withSpinner(DT::dataTableOutput("fundAnalysisSummaryTable")))),
           fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
@@ -148,69 +209,9 @@ ui <- fluidPage(
           )))
         ),
         
-        # Unique Constituents
-        tabPanel("Unique Constituents",
-          fluidRow(column(12, withSpinner(DT::dataTableOutput("constituentsTable")))),
-          fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
-            downloadButton("downloadConstituents", "Download CSV", class = "btn btn-primary btn-sm")
-          )))
-        ),
-        
-        # Average Gift Size
-        tabPanel("Average Gift Size",
-          h4("By Primary Constituency"),
-          fluidRow(column(12, withSpinner(DT::dataTableOutput("avgGiftConstituencyTable")))),
-          fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
-            downloadButton("downloadAvgGiftConstituency", "Download Constituency CSV", class = "btn btn-primary btn-sm")
-          ))),
-          br(),
-          h4("By Gift Type"),
-          fluidRow(column(12, withSpinner(DT::dataTableOutput("avgGiftTypeTable")))),
-          fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
-            downloadButton("downloadAvgGiftType", "Download Gift Type CSV", class = "btn btn-success btn-sm")
-          )))
-        ),
-        
-        # Top Donors
-        tabPanel("Top Donors",
-          fluidRow(column(12, withSpinner(DT::dataTableOutput("topDonorsTable")))),
-          fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
-            downloadButton("downloadTopDonors", "Download CSV", class = "btn btn-primary btn-sm")
-          )))
-        ),
-        
-        # Gift Size Distribution
-        tabPanel("Gift Size Distribution",
-          h4("Gift Count by Range"),
-          fluidRow(column(12, withSpinner(DT::dataTableOutput("giftCountTable")))),
-          fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
-            downloadButton("downloadGiftCounts", "Download Counts CSV", class = "btn btn-primary btn-sm")
-          ))),
-          br(),
-          h4("Gift Amount by Range"),
-          fluidRow(column(12, withSpinner(DT::dataTableOutput("giftAmountTable")))),
-          fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
-            downloadButton("downloadGiftAmounts", "Download Amounts CSV", class = "btn btn-success btn-sm")
-          )))
-        ),
-        
-        # Donor Levels
-        tabPanel("Donor Levels",
-          h4("Number of Donors by Level"),
-          fluidRow(column(12, withSpinner(DT::dataTableOutput("donorCountsTable")))),
-          fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
-            downloadButton("downloadDonorCounts", "Download Counts CSV", class = "btn btn-primary btn-sm")
-          ))),
-          br(),
-          h4("Donation Amounts by Level"),
-          fluidRow(column(12, withSpinner(DT::dataTableOutput("donorAmountsTable")))),
-          fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
-            downloadButton("downloadDonorAmounts", "Download Amounts CSV", class = "btn btn-success btn-sm")
-          )))
-        ),
-        
-        # Full Data
-        tabPanel("Full Data",
+        # 📋 OPERATIONAL REPORTS
+        tabPanel("📋 Operational Reports",
+          h4("Complete Dataset"),
           fluidRow(column(12, withSpinner(DT::dataTableOutput("fullDataTable")))),
           fluidRow(column(12, div(class = "download-buttons text-right", style = "margin-top: 10px;",
             downloadButton("downloadFullData", "Download CSV", class = "btn btn-primary btn-sm")
@@ -300,10 +301,10 @@ server <- function(input, output, session) {
   # DATA TABLE OUTPUTS
   # =============================================================================
   
-  # Summary statistics table
+  # Campaign overview table
   output$summaryTable <- DT::renderDataTable({
     timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-    data <- calculate_summary_stats(filtered_data(), timeframe = timeframe)$detailed_data
+    data <- calculate_campaign_overview(filtered_data(), timeframe = timeframe)$detailed_data
     
     # Add timeframe prefix to year columns
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
@@ -312,16 +313,16 @@ server <- function(input, output, session) {
     DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
   })
   
-  # Fund split tables
+  # Giving by constituency tables
   output$fundSplitSummaryTable <- DT::renderDataTable({
     timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-    data <- calculate_fund_split(filtered_data(), timeframe = timeframe)$summary_table
+    data <- calculate_giving_by_constituency(filtered_data(), timeframe = timeframe)$summary_table
     DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
   })
   
   output$fundSplitDetailTable <- DT::renderDataTable({
     timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-    data <- calculate_fund_split(filtered_data(), timeframe = timeframe)$detailed_data
+    data <- calculate_giving_by_constituency(filtered_data(), timeframe = timeframe)$detailed_data
     
     # Add timeframe prefix to year columns
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
@@ -348,10 +349,10 @@ server <- function(input, output, session) {
     DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
   })
   
-  # Constituents table
+  # Constituency breakdown table
   output$constituentsTable <- DT::renderDataTable({
     timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-    data <- calculate_unique_constituents(filtered_data(), timeframe = timeframe)
+    data <- calculate_constituency_breakdown(filtered_data(), timeframe = timeframe)
     
     # Add timeframe prefix to year columns
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
@@ -363,7 +364,7 @@ server <- function(input, output, session) {
   # Average gift size tables
   output$avgGiftConstituencyTable <- DT::renderDataTable({
     timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-    data <- calculate_avg_gift_analysis(filtered_data(), timeframe = timeframe)$by_constituency
+    data <- calculate_average_gift_insights(filtered_data(), timeframe = timeframe)$by_constituency
     
     # Add timeframe prefix to year columns
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
@@ -374,7 +375,7 @@ server <- function(input, output, session) {
   
   output$avgGiftTypeTable <- DT::renderDataTable({
     timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-    data <- calculate_avg_gift_analysis(filtered_data(), timeframe = timeframe)$by_gift_type
+    data <- calculate_average_gift_insights(filtered_data(), timeframe = timeframe)$by_gift_type
     
     # Add timeframe prefix to year columns
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
@@ -395,10 +396,10 @@ server <- function(input, output, session) {
     DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
   })
   
-  # Gift distribution tables
+  # Gift range distribution tables
   output$giftCountTable <- DT::renderDataTable({
     timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-    data <- calculate_gift_distribution(filtered_data(), timeframe = timeframe)$gift_counts
+    data <- calculate_gift_range_analysis(filtered_data(), timeframe = timeframe)$gift_counts
     
     # Add timeframe prefix to year columns
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
@@ -409,7 +410,7 @@ server <- function(input, output, session) {
   
   output$giftAmountTable <- DT::renderDataTable({
     timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-    data <- calculate_gift_distribution(filtered_data(), timeframe = timeframe)$gift_amounts
+    data <- calculate_gift_range_analysis(filtered_data(), timeframe = timeframe)$gift_amounts
     
     # Add timeframe prefix to year columns
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
@@ -441,27 +442,27 @@ server <- function(input, output, session) {
   # =============================================================================
   
   output$downloadSummary <- downloadHandler(
-    filename = function() paste("summary_stats_", Sys.Date(), ".csv", sep = ""),
+    filename = function() paste("campaign_overview_", Sys.Date(), ".csv", sep = ""),
     content = function(file) {
       timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-      summary_data <- calculate_summary_stats(filtered_data(), timeframe = timeframe)
+      summary_data <- calculate_campaign_overview(filtered_data(), timeframe = timeframe)
       write.csv(summary_data$detailed_data, file, row.names = FALSE)
     }
   )
   
   output$downloadFundSplit <- downloadHandler(
-    filename = function() paste("fund_split_", Sys.Date(), ".csv", sep = ""),
+    filename = function() paste("giving_by_constituency_", Sys.Date(), ".csv", sep = ""),
     content = function(file) {
       timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-      write.csv(calculate_fund_split(filtered_data(), timeframe = timeframe)$detailed_data, file, row.names = FALSE)
+      write.csv(calculate_giving_by_constituency(filtered_data(), timeframe = timeframe)$detailed_data, file, row.names = FALSE)
     }
   )
   
   output$downloadFundSplitSummary <- downloadHandler(
-    filename = function() paste("fund_split_summary_", Sys.Date(), ".csv", sep = ""),
+    filename = function() paste("giving_by_constituency_summary_", Sys.Date(), ".csv", sep = ""),
     content = function(file) {
       timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-      write.csv(calculate_fund_split(filtered_data(), timeframe = timeframe)$summary_table, file, row.names = FALSE)
+      write.csv(calculate_giving_by_constituency(filtered_data(), timeframe = timeframe)$summary_table, file, row.names = FALSE)
     }
   )
   
@@ -482,26 +483,26 @@ server <- function(input, output, session) {
   )
   
   output$downloadConstituents <- downloadHandler(
-    filename = function() paste("constituents_", Sys.Date(), ".csv", sep = ""),
+    filename = function() paste("constituency_breakdown_", Sys.Date(), ".csv", sep = ""),
     content = function(file) {
       timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-      write.csv(calculate_unique_constituents(filtered_data(), timeframe = timeframe), file, row.names = FALSE)
+      write.csv(calculate_constituency_breakdown(filtered_data(), timeframe = timeframe), file, row.names = FALSE)
     }
   )
   
   output$downloadAvgGiftConstituency <- downloadHandler(
-    filename = function() paste("avg_gift_constituency_", Sys.Date(), ".csv", sep = ""),
+    filename = function() paste("avg_gift_by_constituency_", Sys.Date(), ".csv", sep = ""),
     content = function(file) {
       timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-      write.csv(calculate_avg_gift_analysis(filtered_data(), timeframe = timeframe)$by_constituency, file, row.names = FALSE)
+      write.csv(calculate_average_gift_insights(filtered_data(), timeframe = timeframe)$by_constituency, file, row.names = FALSE)
     }
   )
   
   output$downloadAvgGiftType <- downloadHandler(
-    filename = function() paste("avg_gift_type_", Sys.Date(), ".csv", sep = ""),
+    filename = function() paste("avg_gift_by_type_", Sys.Date(), ".csv", sep = ""),
     content = function(file) {
       timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-      write.csv(calculate_avg_gift_analysis(filtered_data(), timeframe = timeframe)$by_gift_type, file, row.names = FALSE)
+      write.csv(calculate_average_gift_insights(filtered_data(), timeframe = timeframe)$by_gift_type, file, row.names = FALSE)
     }
   )
   
@@ -514,23 +515,23 @@ server <- function(input, output, session) {
   )
   
   output$downloadGiftCounts <- downloadHandler(
-    filename = function() paste("gift_counts_", Sys.Date(), ".csv", sep = ""),
+    filename = function() paste("gift_range_counts_", Sys.Date(), ".csv", sep = ""),
     content = function(file) {
       timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-      write.csv(calculate_gift_distribution(filtered_data(), timeframe = timeframe)$gift_counts, file, row.names = FALSE)
+      write.csv(calculate_gift_range_analysis(filtered_data(), timeframe = timeframe)$gift_counts, file, row.names = FALSE)
     }
   )
   
   output$downloadGiftAmounts <- downloadHandler(
-    filename = function() paste("gift_amounts_", Sys.Date(), ".csv", sep = ""),
+    filename = function() paste("gift_range_amounts_", Sys.Date(), ".csv", sep = ""),
     content = function(file) {
       timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
-      write.csv(calculate_gift_distribution(filtered_data(), timeframe = timeframe)$gift_amounts, file, row.names = FALSE)
+      write.csv(calculate_gift_range_analysis(filtered_data(), timeframe = timeframe)$gift_amounts, file, row.names = FALSE)
     }
   )
   
   output$downloadDonorCounts <- downloadHandler(
-    filename = function() paste("donor_counts_", Sys.Date(), ".csv", sep = ""),
+    filename = function() paste("donor_level_counts_", Sys.Date(), ".csv", sep = ""),
     content = function(file) {
       timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
       write.csv(calculate_donor_levels(filtered_data(), timeframe = timeframe)$donor_counts, file, row.names = FALSE)
@@ -538,7 +539,7 @@ server <- function(input, output, session) {
   )
   
   output$downloadDonorAmounts <- downloadHandler(
-    filename = function() paste("donor_amounts_", Sys.Date(), ".csv", sep = ""),
+    filename = function() paste("donor_level_amounts_", Sys.Date(), ".csv", sep = ""),
     content = function(file) {
       timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
       write.csv(calculate_donor_levels(filtered_data(), timeframe = timeframe)$donor_amounts, file, row.names = FALSE)
@@ -546,7 +547,7 @@ server <- function(input, output, session) {
   )
   
   output$downloadFullData <- downloadHandler(
-    filename = function() paste("full_data_", Sys.Date(), ".csv", sep = ""),
+    filename = function() paste("complete_dataset_", Sys.Date(), ".csv", sep = ""),
     content = function(file) write.csv(filtered_data(), file, row.names = FALSE)
   )
 }

@@ -228,12 +228,12 @@ process_data_by_group <- function(data, group_cols, value_col = "Fund Split Amou
 # ANALYSIS FUNCTIONS
 # =============================================================================
 
-#' Calculate summary statistics
+#' Calculate campaign overview statistics
 #' 
 #' @param data Processed gift data
 #' @param timeframe Character, either "fiscal" or "calendar" year
 #' @return List with summary table and detailed data
-calculate_summary_stats <- function(data, timeframe = "fiscal") {
+calculate_campaign_overview <- function(data, timeframe = "fiscal") {
   if (nrow(data) == 0) {
     return(list(
       summary_table = data.frame(
@@ -300,12 +300,12 @@ calculate_summary_stats <- function(data, timeframe = "fiscal") {
   )
 }
 
-#' Calculate fund split analysis by constituency
+#' Calculate giving analysis by constituency
 #' 
 #' @param data Processed gift data
 #' @param timeframe Character, either "fiscal" or "calendar" year
 #' @return List with summary table and detailed data
-calculate_fund_split <- function(data, timeframe = "fiscal") {
+calculate_giving_by_constituency <- function(data, timeframe = "fiscal") {
   if (nrow(data) == 0) return(list(summary_table = data.frame(), detailed_data = data.frame()))
   
   result <- process_data_by_group(data, "Primary Constituency Code", timeframe = timeframe)
@@ -387,12 +387,12 @@ calculate_fund_analysis <- function(data, timeframe = "fiscal") {
   list(summary_table = summary_table, detailed_data = result)
 }
 
-#' Calculate unique constituents analysis
+#' Calculate constituency breakdown analysis
 #' 
 #' @param data Processed gift data
 #' @param timeframe Character, either "fiscal" or "calendar" year
 #' @return Data frame with unique constituent counts by year
-calculate_unique_constituents <- function(data, timeframe = "fiscal") {
+calculate_constituency_breakdown <- function(data, timeframe = "fiscal") {
   if (nrow(data) == 0) return(data.frame())
   
   # Get years
@@ -449,12 +449,12 @@ calculate_unique_constituents <- function(data, timeframe = "fiscal") {
   result
 }
 
-#' Calculate average gift size analysis
+#' Calculate average gift size insights
 #' 
 #' @param data Processed gift data
 #' @param timeframe Character, either "fiscal" or "calendar" year
 #' @return List with by_constituency and by_gift_type data frames
-calculate_avg_gift_analysis <- function(data, timeframe = "fiscal") {
+calculate_average_gift_insights <- function(data, timeframe = "fiscal") {
   if (nrow(data) == 0) return(list(by_constituency = data.frame(), by_gift_type = data.frame()))
   
   # Get years
@@ -547,12 +547,12 @@ calculate_top_donors <- function(data, n = 50, timeframe = "fiscal") {
   result
 }
 
-#' Calculate gift size distribution
+#' Calculate gift range analysis
 #' 
 #' @param data Processed gift data
 #' @param timeframe Character, either "fiscal" or "calendar" year
 #' @return List with gift_counts and gift_amounts data frames
-calculate_gift_distribution <- function(data, timeframe = "fiscal") {
+calculate_gift_range_analysis <- function(data, timeframe = "fiscal") {
   if (nrow(data) == 0) return(list(gift_counts = data.frame(), gift_amounts = data.frame()))
   
   # Get years
