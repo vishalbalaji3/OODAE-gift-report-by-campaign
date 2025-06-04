@@ -86,7 +86,7 @@ apply_data_filters <- function(data, campaign = NULL, gift_types = NULL, years =
   filtered <- data
   
   # Filter by campaign if specified
-  if (!is.null(campaign)) {
+  if (!is.null(campaign) && campaign != "ALL") {
     filtered <- filtered %>% filter(`Campaign ID` == campaign)
   }
   

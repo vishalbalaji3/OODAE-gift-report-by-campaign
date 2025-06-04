@@ -251,7 +251,7 @@ server <- function(input, output, session) {
   })
   
   # Extract unique values for filter options
-  campaigns <- sort(unique(full_data$`Campaign ID`))
+  campaigns <- c("All Campaigns" = "ALL", sort(unique(full_data$`Campaign ID`)))
   gift_types <- sort(unique(full_data$`Gift Type`))
   fiscal_years <- sort(unique(full_data$`Fiscal Year`))
   calendar_years <- sort(unique(format(as.Date(full_data$`Gift Date`), "%Y")))
