@@ -270,13 +270,7 @@ calculate_campaign_overview <- function(data, timeframe = "fiscal") {
     # Add totals row
     gift_type_data <- rbind(gift_type_data, totals_row)
     
-    # Format currency columns (all except the first group column)
-    currency_cols <- names(gift_type_data)[!names(gift_type_data) %in% c("Gift Type")]
-    for (col in currency_cols) {
-      if (is.numeric(gift_type_data[[col]])) {
-        gift_type_data[[col]] <- sapply(gift_type_data[[col]], format_currency)
-      }
-    }
+    # Note: Currency formatting will be handled by DataTables for proper sorting
   }
   
   # Also create simple summary for display
@@ -345,13 +339,7 @@ calculate_giving_by_constituency <- function(data, timeframe = "fiscal") {
     detailed_result <- result
   }
   
-  # Format currency columns (all except the first group column)
-  currency_cols <- names(detailed_result)[!names(detailed_result) %in% c("Primary Constituency Code")]
-  for (col in currency_cols) {
-    if (is.numeric(detailed_result[[col]])) {
-      detailed_result[[col]] <- sapply(detailed_result[[col]], format_currency)
-    }
-  }
+  # Note: Currency formatting will be handled by DataTables for proper sorting
   
   list(summary_table = summary_table, detailed_data = detailed_result)
 }
@@ -376,13 +364,7 @@ calculate_fund_analysis <- function(data, timeframe = "fiscal") {
       `% of Total` = sapply(`% of Total`, format_percent)
     )
   
-  # Format currency columns for detailed data
-  currency_cols <- names(result)[!names(result) %in% c("Fund ID", "Fund Description")]
-  for (col in currency_cols) {
-    if (is.numeric(result[[col]])) {
-      result[[col]] <- sapply(result[[col]], format_currency)
-    }
-  }
+  # Note: Currency formatting will be handled by DataTables for proper sorting
   
   list(summary_table = summary_table, detailed_data = result)
 }
@@ -499,22 +481,7 @@ calculate_average_gift_insights <- function(data, timeframe = "fiscal") {
     left_join(gift_type_overall, by = "Gift Type") %>%
     select(`Gift Type`, all_of(years), `Overall Avg`)
   
-  # Format currency columns for both tables
-  currency_cols <- c(years, "Overall Avg")
-  
-  # Format constituency table
-  for (col in currency_cols) {
-    if (col %in% names(constituency_result) && is.numeric(constituency_result[[col]])) {
-      constituency_result[[col]] <- sapply(constituency_result[[col]], format_currency)
-    }
-  }
-  
-  # Format gift type table
-  for (col in currency_cols) {
-    if (col %in% names(gift_type_result) && is.numeric(gift_type_result[[col]])) {
-      gift_type_result[[col]] <- sapply(gift_type_result[[col]], format_currency)
-    }
-  }
+  # Note: Currency formatting will be handled by DataTables for proper sorting
   
   list(by_constituency = constituency_result, by_gift_type = gift_type_result)
 }
@@ -536,13 +503,7 @@ calculate_top_donors <- function(data, n = 50, timeframe = "fiscal") {
   result <- process_data_by_group(data, c("Constituent ID", "Name", "Primary Constituency Code"), timeframe = timeframe) %>%
     head(n)
   
-  # Format currency columns
-  currency_cols <- names(result)[!names(result) %in% c("Constituent ID", "Name", "Primary Constituency Code")]
-  for (col in currency_cols) {
-    if (is.numeric(result[[col]])) {
-      result[[col]] <- sapply(result[[col]], format_currency)
-    }
-  }
+  # Note: Currency formatting will be handled by DataTables for proper sorting
   
   result
 }
@@ -603,13 +564,7 @@ calculate_gift_range_analysis <- function(data, timeframe = "fiscal") {
     mutate(Total = rowSums(select(., all_of(years)), na.rm = TRUE)) %>%
     select(`Gift Range`, all_of(years), Total)
   
-  # Format currency columns in amounts table
-  currency_cols <- c(years, "Total")
-  for (col in currency_cols) {
-    if (col %in% names(gift_amounts) && is.numeric(gift_amounts[[col]])) {
-      gift_amounts[[col]] <- sapply(gift_amounts[[col]], format_currency)
-    }
-  }
+  # Note: Currency formatting will be handled by DataTables for proper sorting
   
   list(gift_counts = gift_counts, gift_amounts = gift_amounts)
 }
@@ -646,10 +601,10 @@ calculate_donor_levels <- function(data, timeframe = "fiscal") {
     ) %>%
     mutate(`Percentage of Amount` = (`Total Amount` / sum(`Total Amount`)) * 100) %>%
     mutate(
-      `Total Amount` = sapply(`Total Amount`, format_currency),
-      `Average per Donor` = sapply(`Average per Donor`, format_currency),
       `Percentage of Amount` = sapply(`Percentage of Amount`, format_percent)
     )
+  
+  # Note: Currency formatting will be handled by DataTables for proper sorting
   
   list(donor_counts = donor_counts, donor_amounts = donor_amounts)
 }

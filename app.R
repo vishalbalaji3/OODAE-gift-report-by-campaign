@@ -18,6 +18,9 @@ library(DT)
 library(writexl)
 library(plotly)
 
+# Import JS function for DataTables
+JS <- DT::JS
+
 # Source supporting files
 source("config.R")
 source("helpers.R")
@@ -310,14 +313,21 @@ server <- function(input, output, session) {
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
     data <- add_year_prefix(data, prefix)
     
-    DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
+    # Identify currency columns (all except the first column)
+    currency_cols <- names(data)[!names(data) %in% c("Gift Type")]
+    
+    DT::datatable(data, options = create_dt_options(data, currency_cols), rownames = FALSE)
   })
   
   # Giving by constituency tables
   output$fundSplitSummaryTable <- DT::renderDataTable({
     timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
     data <- calculate_giving_by_constituency(filtered_data(), timeframe = timeframe)$summary_table
-    DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
+    
+    # Identify currency columns
+    currency_cols <- c("Total")
+    
+    DT::datatable(data, options = create_dt_options(data, currency_cols), rownames = FALSE)
   })
   
   output$fundSplitDetailTable <- DT::renderDataTable({
@@ -328,14 +338,21 @@ server <- function(input, output, session) {
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
     data <- add_year_prefix(data, prefix)
     
-    DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
+    # Identify currency columns (all except the first column)
+    currency_cols <- names(data)[!names(data) %in% c("Primary Constituency Code")]
+    
+    DT::datatable(data, options = create_dt_options(data, currency_cols), rownames = FALSE)
   })
   
   # Fund analysis tables
   output$fundAnalysisSummaryTable <- DT::renderDataTable({
     timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
     data <- calculate_fund_analysis(filtered_data(), timeframe = timeframe)$summary_table
-    DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
+    
+    # Identify currency columns
+    currency_cols <- c("Total")
+    
+    DT::datatable(data, options = create_dt_options(data, currency_cols), rownames = FALSE)
   })
   
   output$fundAnalysisDetailTable <- DT::renderDataTable({
@@ -346,7 +363,10 @@ server <- function(input, output, session) {
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
     data <- add_year_prefix(data, prefix)
     
-    DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
+    # Identify currency columns (all except the first two columns)
+    currency_cols <- names(data)[!names(data) %in% c("Fund ID", "Fund Description")]
+    
+    DT::datatable(data, options = create_dt_options(data, currency_cols), rownames = FALSE)
   })
   
   # Constituency breakdown table
@@ -358,7 +378,8 @@ server <- function(input, output, session) {
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
     data <- add_year_prefix(data, prefix)
     
-    DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
+    # This table has count data, not currency, so no currency formatting needed
+    DT::datatable(data, options = create_dt_options(data), rownames = FALSE)
   })
   
   # Average gift size tables
@@ -370,7 +391,10 @@ server <- function(input, output, session) {
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
     data <- add_year_prefix(data, prefix)
     
-    DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
+    # Identify currency columns (all except the first column)
+    currency_cols <- names(data)[!names(data) %in% c("Primary Constituency Code")]
+    
+    DT::datatable(data, options = create_dt_options(data, currency_cols), rownames = FALSE)
   })
   
   output$avgGiftTypeTable <- DT::renderDataTable({
@@ -381,7 +405,10 @@ server <- function(input, output, session) {
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
     data <- add_year_prefix(data, prefix)
     
-    DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
+    # Identify currency columns (all except the first column)
+    currency_cols <- names(data)[!names(data) %in% c("Gift Type")]
+    
+    DT::datatable(data, options = create_dt_options(data, currency_cols), rownames = FALSE)
   })
   
   # Top donors table
@@ -393,7 +420,10 @@ server <- function(input, output, session) {
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
     data <- add_year_prefix(data, prefix)
     
-    DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
+    # Identify currency columns (all except the first three columns)
+    currency_cols <- names(data)[!names(data) %in% c("Constituent ID", "Name", "Primary Constituency Code")]
+    
+    DT::datatable(data, options = create_dt_options(data, currency_cols), rownames = FALSE)
   })
   
   # Gift range distribution tables
@@ -405,7 +435,8 @@ server <- function(input, output, session) {
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
     data <- add_year_prefix(data, prefix)
     
-    DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
+    # This table has count data, not currency, so no currency formatting needed
+    DT::datatable(data, options = create_dt_options(data), rownames = FALSE)
   })
   
   output$giftAmountTable <- DT::renderDataTable({
@@ -416,25 +447,40 @@ server <- function(input, output, session) {
     prefix <- if (timeframe == "fiscal") "FY " else "CY "
     data <- add_year_prefix(data, prefix)
     
-    DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
+    # Identify currency columns (all except the first column)
+    currency_cols <- names(data)[!names(data) %in% c("Gift Range")]
+    
+    DT::datatable(data, options = create_dt_options(data, currency_cols), rownames = FALSE)
   })
   
   # Donor levels tables
   output$donorCountsTable <- DT::renderDataTable({
     timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
     data <- calculate_donor_levels(filtered_data(), timeframe = timeframe)$donor_counts
-    DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
+    
+    # This table has count data, not currency, so no currency formatting needed
+    DT::datatable(data, options = create_dt_options(data), rownames = FALSE)
   })
   
   output$donorAmountsTable <- DT::renderDataTable({
     timeframe <- if (!is.null(input$dataTab_timeframe)) input$dataTab_timeframe else "fiscal"
     data <- calculate_donor_levels(filtered_data(), timeframe = timeframe)$donor_amounts
-    DT::datatable(data, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
+    
+    # Identify currency columns
+    currency_cols <- c("Total Amount", "Average per Donor")
+    
+    DT::datatable(data, options = create_dt_options(data, currency_cols), rownames = FALSE)
   })
   
   # Full data table
   output$fullDataTable <- DT::renderDataTable({
-    DT::datatable(filtered_data(), options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE)
+    data <- filtered_data()
+    
+    # Identify currency columns in the full dataset
+    currency_cols <- c("Gift Amount", "Gift Receipt Amount", "Gift Pledge Balance", "Fund Split Amount")
+    currency_cols <- currency_cols[currency_cols %in% names(data)]
+    
+    DT::datatable(data, options = create_dt_options(data, currency_cols), rownames = FALSE)
   })
   
   # =============================================================================
@@ -573,6 +619,53 @@ add_year_prefix <- function(data, prefix) {
   }
   names(data) <- new_names
   return(data)
+}
+
+#' Create DataTables options with currency formatting
+#' 
+#' @param data Data frame to display
+#' @param currency_cols Character vector of column names that should be formatted as currency
+#' @param page_length Number of rows per page (default: 25)
+#' @return DataTables options list
+create_dt_options <- function(data, currency_cols = NULL, page_length = 25) {
+  options <- list(
+    pageLength = page_length, 
+    scrollX = TRUE,
+    rownames = FALSE
+  )
+  
+  # Add currency formatting if currency columns are specified
+  if (!is.null(currency_cols) && length(currency_cols) > 0) {
+    # Find column indices for currency columns
+    col_indices <- which(names(data) %in% currency_cols) - 1  # DataTables uses 0-based indexing
+    
+    if (length(col_indices) > 0) {
+      options$columnDefs <- list(
+        list(
+          targets = col_indices,
+          render = JS("
+            function(data, type, row) {
+              if (type === 'display') {
+                if (data === null || data === undefined || data === '') return '$0';
+                var num = parseFloat(data);
+                if (isNaN(num)) return data;
+                if (num >= 1000000) {
+                  return '$' + (num / 1000000).toFixed(1) + 'M';
+                } else if (num >= 1000) {
+                  return '$' + (num / 1000).toFixed(1) + 'K';
+                } else {
+                  return '$' + num.toLocaleString();
+                }
+              }
+              return data;
+            }
+          ")
+        )
+      )
+    }
+  }
+  
+  return(options)
 }
 
 # =============================================================================
