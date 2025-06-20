@@ -247,32 +247,6 @@ calculate_campaign_overview <- function(data, timeframe = "fiscal") {
   # Process by Gift Type with year breakdown
   gift_type_data <- process_data_by_group(data, "Gift Type", timeframe = timeframe)
   
-  # Add totals row for each year
-  if (nrow(gift_type_data) > 0) {
-    # Convert factor columns to character to avoid assignment issues
-    if (is.factor(gift_type_data$`Gift Type`)) {
-      gift_type_data$`Gift Type` <- as.character(gift_type_data$`Gift Type`)
-    }
-    
-    # Create totals row with same structure as gift_type_data
-    totals_row <- gift_type_data[1, ]  # Copy structure
-    totals_row[1, "Gift Type"] <- "TOTAL"
-    
-    # Calculate totals for each column
-    for (col_name in names(gift_type_data)) {
-      if (col_name != "Gift Type" && col_name %in% names(gift_type_data)) {
-        if (is.numeric(gift_type_data[[col_name]])) {
-          totals_row[[col_name]] <- sum(gift_type_data[[col_name]], na.rm = TRUE)
-        }
-      }
-    }
-    
-    # Add totals row
-    gift_type_data <- rbind(gift_type_data, totals_row)
-    
-    # Note: Currency formatting will be handled by DataTables for proper sorting
-  }
-  
   # Also create simple summary for display
   total_gifts <- nrow(data)
   total_amount <- sum(data$`Fund Split Amount`, na.rm = TRUE)
@@ -313,35 +287,9 @@ calculate_giving_by_constituency <- function(data, timeframe = "fiscal") {
       `% of Total` = sapply(`% of Total`, format_percent)
     )
   
-  # Add totals row to detailed data
-  if (nrow(result) > 0) {
-    # Convert factor columns to character to avoid assignment issues
-    if (is.factor(result$`Primary Constituency Code`)) {
-      result$`Primary Constituency Code` <- as.character(result$`Primary Constituency Code`)
-    }
-    
-    # Create totals row with same structure as result
-    totals_row <- result[1, ]  # Copy structure
-    totals_row[1, "Primary Constituency Code"] <- "TOTAL"
-    
-    # Calculate totals for each column
-    for (col_name in names(result)) {
-      if (col_name != "Primary Constituency Code" && col_name %in% names(result)) {
-        if (is.numeric(result[[col_name]])) {
-          totals_row[[col_name]] <- sum(result[[col_name]], na.rm = TRUE)
-        }
-      }
-    }
-    
-    # Add totals row
-    detailed_result <- rbind(result, totals_row)
-  } else {
-    detailed_result <- result
-  }
-  
   # Note: Currency formatting will be handled by DataTables for proper sorting
   
-  list(summary_table = summary_table, detailed_data = detailed_result)
+  list(summary_table = summary_table, detailed_data = result)
 }
 
 #' Calculate fund analysis
@@ -403,30 +351,6 @@ calculate_constituency_breakdown <- function(data, timeframe = "fiscal") {
     left_join(total_unique, by = "Primary Constituency Code") %>%
     select(`Primary Constituency Code`, all_of(years), Total) %>%
     arrange(desc(Total))
-  
-  # Add totals row for each year
-  if (nrow(result) > 0) {
-    # Convert factor columns to character to avoid assignment issues
-    if (is.factor(result$`Primary Constituency Code`)) {
-      result$`Primary Constituency Code` <- as.character(result$`Primary Constituency Code`)
-    }
-    
-    # Create totals row with same structure as result
-    totals_row <- result[1, ]  # Copy structure
-    totals_row[1, "Primary Constituency Code"] <- "TOTAL"
-    
-    # Calculate totals for each column
-    for (col_name in names(result)) {
-      if (col_name != "Primary Constituency Code" && col_name %in% names(result)) {
-        if (is.numeric(result[[col_name]])) {
-          totals_row[[col_name]] <- sum(result[[col_name]], na.rm = TRUE)
-        }
-      }
-    }
-    
-    # Add totals row
-    result <- rbind(result, totals_row)
-  }
   
   result
 }
