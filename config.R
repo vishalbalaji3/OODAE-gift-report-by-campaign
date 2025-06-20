@@ -13,7 +13,8 @@ CONFIG <- list(
   
   # Hierarchy for determining primary constituency code
   # When a constituent has multiple codes, the first match in this list is used
-  constituency_hierarchy = c("UMMC Alumni", "UMMC Affilate", "Organization", "Individuals", "Other"),
+  # NA represents NULL/empty values and should be sorted last
+  constituency_hierarchy = c("UMMC Alumni", "UMMC Affilate", "Organization", "Individuals", NA_character_),
   
   # Mapping from raw constituency codes to standardized categories
   # This consolidates similar constituency types into broader categories

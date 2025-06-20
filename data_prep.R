@@ -210,8 +210,13 @@ process_data_by_group <- function(data, group_cols, value_col = "Fund Split Amou
   year_cols <- intersect(names(result), years)
   if (length(year_cols) > 0) {
     result <- result %>%
-      mutate(Total = rowSums(select(., all_of(year_cols)), na.rm = TRUE)) %>%
-      arrange(desc(Total))
+      mutate(Total = rowSums(select(., all_of(year_cols)), na.rm = TRUE))
+    
+    # Only sort by total if not grouping by Primary Constituency Code
+    # (constituency functions will handle their own sorting by hierarchy)
+    if (!("Primary Constituency Code" %in% group_cols)) {
+      result <- result %>% arrange(desc(Total))
+    }
   }
   
   # Reorder columns: group columns, then years, then total
@@ -277,6 +282,13 @@ calculate_giving_by_constituency <- function(data, timeframe = "fiscal") {
   if (nrow(data) == 0) return(list(summary_table = data.frame(), detailed_data = data.frame()))
   
   result <- process_data_by_group(data, "Primary Constituency Code", timeframe = timeframe)
+  
+  # Sort by constituency hierarchy instead of by total amount
+  result <- result %>%
+    mutate(`Primary Constituency Code` = factor(`Primary Constituency Code`, 
+                                               levels = CONFIG$constituency_hierarchy, 
+                                               ordered = TRUE)) %>%
+    arrange(`Primary Constituency Code`)
   
   # Create summary table with percentages
   summary_table <- result %>%
@@ -346,11 +358,14 @@ calculate_constituency_breakdown <- function(data, timeframe = "fiscal") {
     group_by(`Primary Constituency Code`) %>%
     summarise(Total = n_distinct(`Constituent ID`), .groups = 'drop')
   
-  # Combine
+  # Combine and sort by constituency hierarchy
   result <- yearly_data %>%
     left_join(total_unique, by = "Primary Constituency Code") %>%
     select(`Primary Constituency Code`, all_of(years), Total) %>%
-    arrange(desc(Total))
+    mutate(`Primary Constituency Code` = factor(`Primary Constituency Code`, 
+                                               levels = CONFIG$constituency_hierarchy, 
+                                               ordered = TRUE)) %>%
+    arrange(`Primary Constituency Code`)
   
   result
 }
@@ -384,10 +399,14 @@ calculate_average_gift_insights <- function(data, timeframe = "fiscal") {
     group_by(`Primary Constituency Code`) %>%
     summarise(`Overall Avg` = mean(`Fund Split Amount`, na.rm = TRUE), .groups = 'drop')
   
-  # Combine constituency data
+  # Combine constituency data and sort by hierarchy
   constituency_result <- constituency_avgs %>%
     left_join(constituency_overall, by = "Primary Constituency Code") %>%
-    select(`Primary Constituency Code`, all_of(years), `Overall Avg`)
+    select(`Primary Constituency Code`, all_of(years), `Overall Avg`) %>%
+    mutate(`Primary Constituency Code` = factor(`Primary Constituency Code`, 
+                                               levels = CONFIG$constituency_hierarchy, 
+                                               ordered = TRUE)) %>%
+    arrange(`Primary Constituency Code`)
   
   # Calculate averages by gift type and year
   gift_type_avgs <- data %>%
