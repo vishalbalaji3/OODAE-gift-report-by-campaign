@@ -78,16 +78,22 @@ get_primary_code <- function(codes, hierarchy) {
 #' 
 #' @param data Data frame containing gift data
 #' @param campaign Character, campaign ID to filter by (optional)
+#' @param fund_category Character, fund category to filter by (optional)
 #' @param gift_types Character vector, gift types to include (optional)
 #' @param years Character vector, years to include (optional)
 #' @param timeframe Character, either "fiscal" or "calendar" year
 #' @return Filtered data frame
-apply_data_filters <- function(data, campaign = NULL, gift_types = NULL, years = NULL, timeframe = "fiscal") {
+apply_data_filters <- function(data, campaign = NULL, fund_category = NULL, gift_types = NULL, years = NULL, timeframe = "fiscal") {
   filtered <- data
   
   # Filter by campaign if specified
   if (!is.null(campaign) && campaign != "ALL") {
     filtered <- filtered %>% filter(`Campaign ID` == campaign)
+  }
+  
+  # Filter by fund category if specified
+  if (length(fund_category) > 0 && !("ALL" %in% fund_category)) {
+    filtered <- filtered %>% filter(`Fund Category` %in% fund_category)
   }
   
   # Filter by gift types if specified

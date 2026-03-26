@@ -34,34 +34,44 @@ source("data_prep.R")
 #' 
 #' @param id_prefix Prefix for input IDs
 #' @param campaigns Available campaign choices
+#' @param fund_categories Available fund category choices
 #' @param gift_types Available gift type choices
 #' @param years Available year choices
 #' @return HTML div with filter controls
-create_filter_panel <- function(id_prefix, campaigns, gift_types, years) {
+create_filter_panel <- function(id_prefix, campaigns, fund_categories, gift_types, years) {
   div(
     class = "well",
     h4("Filter Data", class = "text-primary"),
     fluidRow(
-      column(3,
+      column(4,
              selectInput(paste0(id_prefix, "_campaign"),
                         "Select Campaign ID:",
                         choices = campaigns,
                         selected = campaigns[1])
       ),
-      column(3,
+      column(4,
+             selectInput(paste0(id_prefix, "_fundCategory"),
+                        "Select Fund Category:",
+                        choices = fund_categories,
+                        multiple = TRUE,
+                        selected = fund_categories[1])
+      ),
+      column(4,
              selectInput(paste0(id_prefix, "_giftType"),
                         "Select Gift Type:",
                         choices = gift_types,
                         multiple = TRUE)
-      ),
-      column(3,
+      )
+    ),
+    fluidRow(
+      column(6,
              radioButtons(paste0(id_prefix, "_timeframe"),
                          "Time Period:",
                          choices = c("Fiscal Year" = "fiscal", "Calendar Year" = "calendar"),
                          selected = "fiscal",
                          inline = TRUE)
       ),
-      column(3,
+      column(6,
              selectInput(paste0(id_prefix, "_year"),
                         "Select Year:",
                         choices = years,
@@ -256,6 +266,12 @@ server <- function(input, output, session) {
   
   # Extract unique values for filter options
   campaigns <- c("All Campaigns" = "ALL", sort(unique(full_data$`Campaign ID`)))
+  
+  # Extract and clean fund categories
+  unique_fund_cats <- unique(full_data$`Fund Category`)
+  unique_fund_cats <- unique_fund_cats[!is.na(unique_fund_cats) & unique_fund_cats != ""]
+  fund_categories <- c("All Fund Categories" = "ALL", sort(unique_fund_cats))
+  
   gift_types <- sort(unique(full_data$`Gift Type`))
   fiscal_years <- sort(unique(full_data$`Fiscal Year`))
   calendar_years <- sort(unique(format(as.Date(full_data$`Gift Date`), "%Y")))
@@ -264,17 +280,75 @@ server <- function(input, output, session) {
   observe({
     insertUI(
       selector = "#dataTabFilter",
-      ui = create_filter_panel("dataTab", campaigns, gift_types, fiscal_years)
+      ui = create_filter_panel("dataTab", campaigns, fund_categories, gift_types, fiscal_years)
     )
   })
   
   observe({
     insertUI(
       selector = "#vizFilter", 
-      ui = create_filter_panel("viz", campaigns, gift_types, fiscal_years)
+      ui = create_filter_panel("viz", campaigns, fund_categories, gift_types, fiscal_years)
     )
   })
   
+  # Update fund categories based on selected campaign for dataTab
+  observeEvent(input$dataTab_campaign, {
+    req(input$dataTab_campaign)
+    curr_camp <- input$dataTab_campaign
+    
+    if (curr_camp == "ALL") {
+      valid_cats <- unique_fund_cats
+    } else {
+      valid_cats <- unique(full_data$`Fund Category`[full_data$`Campaign ID` == curr_camp])
+    }
+    
+    valid_cats <- valid_cats[!is.na(valid_cats) & valid_cats != ""]
+    valid_cats <- sort(valid_cats)
+    choices_out <- c("All Fund Categories" = "ALL", valid_cats)
+    
+    curr_selected <- input$dataTab_fundCategory
+    
+    if (is.null(curr_selected) || "ALL" %in% curr_selected) {
+      new_selected <- "ALL"
+    } else {
+      new_selected <- intersect(curr_selected, valid_cats)
+      if (length(new_selected) == 0) new_selected <- "ALL"
+    }
+    
+    updateSelectInput(session, "dataTab_fundCategory",
+                      choices = choices_out,
+                      selected = new_selected)
+  }, ignoreInit = TRUE)
+  
+  # Update fund categories based on selected campaign for viz
+  observeEvent(input$viz_campaign, {
+    req(input$viz_campaign)
+    curr_camp <- input$viz_campaign
+    
+    if (curr_camp == "ALL") {
+      valid_cats <- unique_fund_cats
+    } else {
+      valid_cats <- unique(full_data$`Fund Category`[full_data$`Campaign ID` == curr_camp])
+    }
+    
+    valid_cats <- valid_cats[!is.na(valid_cats) & valid_cats != ""]
+    valid_cats <- sort(valid_cats)
+    choices_out <- c("All Fund Categories" = "ALL", valid_cats)
+    
+    curr_selected <- input$viz_fundCategory
+    
+    if (is.null(curr_selected) || "ALL" %in% curr_selected) {
+      new_selected <- "ALL"
+    } else {
+      new_selected <- intersect(curr_selected, valid_cats)
+      if (length(new_selected) == 0) new_selected <- "ALL"
+    }
+    
+    updateSelectInput(session, "viz_fundCategory",
+                      choices = choices_out,
+                      selected = new_selected)
+  }, ignoreInit = TRUE)
+
   # Update year choices based on timeframe selection
   observe({
     timeframe <- input$dataTab_timeframe
@@ -294,6 +368,7 @@ server <- function(input, output, session) {
     apply_data_filters(
       data = full_data,
       campaign = input$dataTab_campaign,
+      fund_category = input$dataTab_fundCategory,
       gift_types = input$dataTab_giftType,
       years = input$dataTab_year,
       timeframe = timeframe
